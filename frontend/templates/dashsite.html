@@ -1,0 +1,3168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            transition: opacity 1s ease-in-out;
+            background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(3px);
+        }
+        
+        .button-column {
+            width: 200px;
+            padding: 20px;
+            background-color: rgba(248, 249, 250, 0.3);
+            border-right: 1px solid rgba(222, 226, 230, 0.5);
+        }
+        
+        .btn-vertical {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: left;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background-color: rgba(233, 236, 239, 0.8);
+            color: #495057;
+            border: 1px solid rgba(206, 212, 218, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .btn-vertical:hover {
+            background-color: rgba(209, 215, 220, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .sample-config {
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: rgba(248, 249, 250, 0.85);
+            border: 1px solid rgba(206, 212, 218, 0.7);
+        }
+
+        .sample-config label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .sample-config select,
+        .sample-config button {
+            width: 100%;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(243, 236, 236, 0.2);
+        }
+        
+        .header-box {
+            background: rgba(248, 249, 250, 0.442);
+            border-radius: 6px;
+            color: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid rgba(108, 117, 125, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 1px solid rgba(233, 237, 240, 0.5);
+        }
+        
+        .header-box h1 {
+            font-size: 2.2rem;
+            color: #343a40;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .header-box p {
+            color: #25282b;
+            font-size: 1rem;
+            margin-bottom: 0;
+            text-align: center;
+        }
+        
+        .section-title {
+            background-color: rgba(108, 117, 125, 0.7);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 25px 0 15px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .form-container, .result-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .prediction-heading {
+            background-color: #6c757d;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+        }
+        
+        .prediction-heading:hover {
+            background-color: #5a6268;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .prediction-heading::after {
+            content: " (Click to expand)";
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        /* Focus Mode CSS */
+        .faculty-sections-row.focus-mode {
+            display: block;
+        }
+        
+        .faculty-column.hidden {
+            display: none !important;
+        }
+        
+        .faculty-column.expanded {
+            width: 100%;
+            padding: 0;
+        }
+        
+        .faculty-column.expanded + .faculty-column {
+            border-left: none;
+            padding-left: 0;
+        }
+        
+        .prediction-heading.in-focus-mode {
+            background-color: #5a6268;
+        }
+        
+        .prediction-heading.in-focus-mode::after {
+            content: " (Click to return to grid)";
+        }
+        
+        .result-table {
+            width: 100%;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-size: .9rem;
+        }
+        
+        .result-table th, .result-table td {
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-table th {
+            background-color: #a9aeb3;
+            color: white;
+        }
+        
+        .result-table td.passing {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .result-table td.failing {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .result-table td.borderline {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .result-table td.intervention {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .shap-legend {
+            display: none;
+        }
+        
+        .shap-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            table-layout: auto;
+            font-size: .9rem;
+        }
+        
+        .shap-table th, .shap-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            white-space: nowrap;
+        }
+        
+        .shap-table th {
+            background-color: #9a9ea1;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .shap-table td {
+            vertical-align: middle;
+        }
+        
+        .shap-table .positive {
+            color: #28a745;
+        }
+        
+        .shap-table .negative {
+            color: #dc3545;
+        }
+        
+        .shap-table .positive::before {
+            content: "↑ ";
+        }
+        
+        .shap-table .negative::before {
+            content: "↓ ";
+        }
+
+        .shap-canvas-container {
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 1px solid rgba(173, 181, 189, 0.7);
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .faculty-column .shap-table {
+            width: max-content;
+            min-width: 100%;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-size: 0.8rem;
+            background-color: rgba(248, 249, 250, 0.7);
+            border-top: 1px solid rgba(222, 226, 230, 0.5);
+            margin-top: auto;
+        }
+        
+        .tab-content {
+            margin-top: 20px;
+        }
+
+        .faculty-sections-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+
+        .faculty-column {
+            min-width: 0;
+        }
+
+        .faculty-column + .faculty-column {
+            border-left: 2px solid rgba(108, 117, 125, 0.35);
+            padding-left: 12px;
+        }
+
+        .faculty-column .kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .faculty-column.expanded .kpi-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .faculty-column .kpi-card {
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+        }
+
+        .faculty-column .kpi-card h3 {
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+        }
+
+        .faculty-column .kpi-card .value {
+            font-size: 1.2rem;
+        }
+
+        .faculty-column .kpi-card .change {
+            font-size: 0.72rem;
+        }
+
+        .faculty-column .faculty-prediction-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: nowrap;
+        }
+
+        .faculty-column .faculty-prediction-header h5 {
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .faculty-column .faculty-prediction-toggle {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        #engineeringShapChart, #appliedSciencesShapChart {
+            height: 400px !important;
+            width: 100%;
+            display: none;
+        }
+        
+        .kpi-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-left: 4px solid;
+        }
+        
+        .kpi-card h3 {
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .kpi-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+        
+        .kpi-card .change {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .kpi-card .change.positive {
+            color: #28a745;
+        }
+        
+        .kpi-card .change.negative {
+            color: #dc3545;
+        }
+        
+        .kpi-card .change.neutral {
+            color: #6c757d;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1px;
+            margin-bottom: 10px;
+        }
+
+        .compact-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .compact-stat-card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 12px;
+            padding: 10px 12px 8px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(6px);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            color: white;
+            padding: 10px 9px;
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-label,
+        body[data-cumulative-design="previous"] .compact-stat-label i {
+            color: white;
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-meta {
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-blue {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-green {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-yellow {
+            background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-red {
+            background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-slate {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-teal {
+            background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-blue .compact-stat-badge,
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-green .compact-stat-badge,
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-yellow .compact-stat-badge,
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-red .compact-stat-badge,
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-slate .compact-stat-badge,
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-teal .compact-stat-badge {
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+        }
+
+        /* ── Glass Design (exact filter-tab match) ───────────────── */
+
+        /* Left-aligned flex row — same as the filter tabs strip */
+        body[data-cumulative-design="glass"] .compact-stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 8px;
+            max-width: none;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        /* Base: pointer cursor + smooth transitions */
+        body[data-cumulative-design="glass"] .compact-stat-card {
+            cursor: pointer;
+            transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        /* Unselected: semi-transparent frosted — coloured label just like inactive filter tab */
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected) {
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.38);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Hover: lift + more opaque, same feel as hovering a filter tab */
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected):hover {
+            background: rgba(255, 255, 255, 0.70);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.13);
+            transform: translateY(-1px);
+        }
+
+        /* Unselected label: accent colour per card — matches coloured tab labels (At-Risk=red, Safe=green …) */
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-blue .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-blue .compact-stat-label i   { color: #0d6efd; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-green .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-green .compact-stat-label i  { color: #28a745; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-yellow .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-yellow .compact-stat-label i { color: #d39e00; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-red .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-red .compact-stat-label i    { color: #dc3545; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-slate .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-slate .compact-stat-label i  { color: #5c6770; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-teal .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-teal .compact-stat-label i   { color: #17a2b8; }
+
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected) .compact-stat-meta { color: #6c757d; }
+
+        /* Unselected badge: solid accent pill — same as the filter tab number badges */
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-blue .compact-stat-badge   { background: #0d6efd; color: #fff; box-shadow: none; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-green .compact-stat-badge  { background: #28a745; color: #fff; box-shadow: none; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-yellow .compact-stat-badge { background: #ffbf00; color: #212529; box-shadow: none; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-red .compact-stat-badge    { background: #dc3545; color: #fff; box-shadow: none; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-slate .compact-stat-badge  { background: #5c6770; color: #fff; box-shadow: none; }
+        body[data-cumulative-design="glass"] .compact-stat-card:not(.selected).stat-teal .compact-stat-badge   { background: #17a2b8; color: #fff; box-shadow: none; }
+
+        /* Selected/active: solid white + bottom accent border (like active filter tab indicator) */
+        body[data-cumulative-design="glass"] .compact-stat-card.selected {
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+        }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-blue   { border: 1px solid #0d6efd; border-bottom: 3px solid #0d6efd; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-green  { border: 1px solid #28a745; border-bottom: 3px solid #28a745; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-yellow { border: 1px solid #ffbf00; border-bottom: 3px solid #ffbf00; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-red    { border: 1px solid #dc3545; border-bottom: 3px solid #dc3545; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-slate  { border: 1px solid #5c6770; border-bottom: 3px solid #5c6770; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-teal   { border: 1px solid #17a2b8; border-bottom: 3px solid #17a2b8; }
+
+        /* Selected: accent label colours */
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-blue .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-blue .compact-stat-label i   { color: #0d6efd; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-green .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-green .compact-stat-label i  { color: #28a745; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-yellow .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-yellow .compact-stat-label i { color: #d39e00; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-red .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-red .compact-stat-label i    { color: #dc3545; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-slate .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-slate .compact-stat-label i  { color: #5c6770; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-teal .compact-stat-label,
+        body[data-cumulative-design="glass"] .compact-stat-card.selected.stat-teal .compact-stat-label i   { color: #17a2b8; }
+        body[data-cumulative-design="glass"] .compact-stat-card.selected .compact-stat-meta { color: #6c757d; }
+
+        .design-switch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(222, 226, 230, 0.9);
+        }
+
+        .design-switch label {
+            margin: 0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .design-switch .custom-select {
+            width: auto;
+            min-width: 118px;
+            height: 24px;
+            padding-top: 1px;
+            padding-bottom: 1px;
+            font-size: 0.72rem;
+            border-radius: 8px;
+        }
+
+        .cumulative-header-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 12px;
+            justify-items: center;
+        }
+
+        .cumulative-header-row .cumulative-title {
+            grid-column: 2;
+            justify-self: center;
+            text-align: center;
+        }
+
+        .cumulative-header-row .design-switch {
+            grid-column: 3;
+            justify-self: end;
+            position: static;
+            transform: none;
+        }
+
+        .compact-stat-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .compact-stat-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #495057;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .compact-stat-label i {
+            margin-right: 6px;
+        }
+
+        .compact-stat-badge {
+            min-width: 34px;
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+        }
+
+        .compact-stat-meta {
+            font-size: 0.68rem;
+            color: #6c757d;
+            margin-top: 5px;
+            min-height: 1em;
+            padding-left: 2px;
+        }
+
+        .compact-stat-card.stat-blue .compact-stat-label,
+        .compact-stat-card.stat-blue .compact-stat-label i {
+            color: #0d6efd;
+        }
+
+        .compact-stat-card.stat-blue .compact-stat-badge {
+            background: #0d6efd;
+        }
+
+        .compact-stat-card.stat-green .compact-stat-label,
+        .compact-stat-card.stat-green .compact-stat-label i {
+            color: #28a745;
+        }
+
+        .compact-stat-card.stat-green .compact-stat-badge {
+            background: #28a745;
+        }
+
+        .compact-stat-card.stat-yellow .compact-stat-label,
+        .compact-stat-card.stat-yellow .compact-stat-label i {
+            color: #ffbf00;
+        }
+
+        .compact-stat-card.stat-yellow .compact-stat-badge {
+            background: #ffbf00;
+            color: #212529;
+        }
+
+        .compact-stat-card.stat-red .compact-stat-label,
+        .compact-stat-card.stat-red .compact-stat-label i {
+            color: #dc3545;
+        }
+
+        .compact-stat-card.stat-red .compact-stat-badge {
+            background: #dc3545;
+        }
+
+        .compact-stat-card.stat-slate .compact-stat-label,
+        .compact-stat-card.stat-slate .compact-stat-label i {
+            color: #5c6770;
+        }
+
+        .compact-stat-card.stat-slate .compact-stat-badge {
+            background: #5c6770;
+        }
+
+        .compact-stat-card.stat-teal .compact-stat-label,
+        .compact-stat-card.stat-teal .compact-stat-label i {
+            color: #17a2b8;
+        }
+
+        .compact-stat-card.stat-teal .compact-stat-badge {
+            background: #17a2b8;
+        }
+
+        /* Keep text readable on solid Previous design cards.
+           This block is intentionally placed after generic stat color rules. */
+        body[data-cumulative-design="previous"] .compact-stat-card .compact-stat-label,
+        body[data-cumulative-design="previous"] .compact-stat-card .compact-stat-label i {
+            color: #ffffff;
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card .compact-stat-meta {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card .compact-stat-badge {
+            color: #ffffff;
+        }
+
+        body[data-cumulative-design="previous"] .compact-stat-card.stat-yellow .compact-stat-badge {
+            color: #212529;
+        }
+        
+        .kpi-card.canvas-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5px;
+        }
+        
+        .kpi-card canvas {
+            max-height: 100px !important;
+            width: 100%;
+        }
+        
+        .student-details-modal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .student-details-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .student-details-table th, .student-details-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .student-details-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .email-btn {
+            margin-left: 5px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        #pdfPreview {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #dee2e6;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .button-column {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+                padding: 10px;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            
+            .btn-vertical {
+                display: inline-block;
+                width: auto;
+                margin-right: 10px;
+            }
+            
+            .header-box h1 {
+                font-size: 1.8rem;
+            }
+            
+            #engineeringShapChart, #appliedSciencesShapChart {
+                height: 300px !important;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .faculty-sections-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .faculty-column + .faculty-column {
+                border-left: none;
+                padding-left: 0;
+            }
+            
+            .kpi-card canvas {
+                max-height: 60px !important;
+            }
+            
+            #pdfPreview {
+                height: 300px;
+            }
+            
+            .shap-table th, .shap-table td {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            .shap-bar {
+        background-color: #007bff; /* Blue background */
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        margin: 20px 0; /* Adds spacing above and below */
+    }
+
+    .shap-bar h6 {
+        color: white;       /* White text */
+        margin: 0;          /* Remove default margins */
+        font-size: 16px;    /* Optional: adjust size */
+        font-weight: bold;  /* Optional: make bold */
+    }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage"></div>
+    
+    <div class="content-wrapper">
+        <div class="main-container">
+            <div class="button-column">
+                <a href="/" class="btn-vertical active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" class="btn-vertical" id="viewHistoryBtn">
+                    <i class="fas fa-history"></i> View History
+                </a>
+                <a href="#" class="btn-vertical" id="manageInterventionsBtn">
+                    <i class="fas fa-tasks"></i> Interventions
+                </a>
+                <a href="/engineering" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Engineering
+                </a>
+                <a href="/applied-sciences" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Appl Sciences
+                </a>
+                <a href="/recommend" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Recommend
+                </a>
+                <a href="/modelsai" class="btn-vertical">
+                    <i class="fas fa-edit"></i> ModelsAi
+                </a>
+                <a href="/ai" class="btn-vertical">
+                    <i class="fas fa-edit"></i> DUTAi
+                </a>
+                <a href="/flagged-students" class="btn-vertical" id="viewFlaggedBtn">
+                    <i class="fas fa-flag"></i> Flagged Students
+                </a>
+                <div class="sample-config">
+                    <label for="sampleSizeSelect"><i class="fas fa-random"></i> Sample Size</label>
+                    <select id="sampleSizeSelect" class="form-control form-control-sm">
+                        <option value="auto" selected>Auto (8-30 per faculty)</option>
+                        <option value="5">5 per faculty</option>
+                        <option value="10">10 per faculty</option>
+                        <option value="15">15 per faculty</option>
+                        <option value="25">25 per faculty</option>
+                        <option value="50">50 per faculty</option>
+                    </select>
+                    <button id="applySampleSizeBtn" class="btn btn-sm btn-secondary" type="button">
+                        Apply & Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div class="header-box">
+                    <h3><i class="fas fa-tachometer-alt"></i> DUT STUDENT ANALYTICS DASHBOARD</h3>
+                    <p>Real-time student success predictions and performance monitoring</p>
+                </div>
+                
+                <div class="section-title cumulative-header-row">
+                    <div style="justify-self:start;">
+                        <button id="resetStatsBtn" class="btn btn-sm btn-danger" title="Reset all cumulative statistics to zero">
+                            <i class="fas fa-redo-alt"></i> Reset
+                        </button>
+                    </div>
+                    <span class="cumulative-title"><i class="fas fa-history"></i> Cumulative Statistics</span>
+                    <div class="design-switch">
+                        <label for="cumulativeDesignSelect">Design</label>
+                        <select id="cumulativeDesignSelect" class="custom-select custom-select-sm">
+                            <option value="current">Current</option>
+                            <option value="previous">Previous</option>
+                            <option value="glass">Glass</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="compact-stats-grid">
+                    <div class="compact-stat-card stat-blue">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-list"></i>Total Predictions</div>
+                            <div class="compact-stat-badge" id="cumulativeTotalPredictions">0</div>
+                        </div>
+                        <div class="compact-stat-meta">All-time total</div>
+                    </div>
+                    <div class="compact-stat-card stat-green">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-check-circle"></i>Passing</div>
+                            <div class="compact-stat-badge" id="cumulativePassing">0</div>
+                        </div>
+                        <div class="compact-stat-meta"><span id="cumulativePassingPercent">0%</span> of total</div>
+                    </div>
+                    <div class="compact-stat-card stat-yellow">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-exclamation-circle"></i>Borderline</div>
+                            <div class="compact-stat-badge" id="cumulativeBorderline">0</div>
+                        </div>
+                        <div class="compact-stat-meta"><span id="cumulativeBorderlinePercent">0%</span> of total</div>
+                    </div>
+                    <div class="compact-stat-card stat-red">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-times-circle"></i>Failing</div>
+                            <div class="compact-stat-badge" id="cumulativeFailing">0</div>
+                        </div>
+                        <div class="compact-stat-meta"><span id="cumulativeFailingPercent">0%</span> of total</div>
+                    </div>
+                    <div class="compact-stat-card stat-slate">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-building"></i>Engineering</div>
+                            <div class="compact-stat-badge" id="cumulativeEngineeringTotal">0</div>
+                        </div>
+                        <div class="compact-stat-meta">Faculty total</div>
+                    </div>
+                    <div class="compact-stat-card stat-teal">
+                        <div class="compact-stat-main">
+                            <div class="compact-stat-label"><i class="fas fa-flask"></i>Applied Sciences</div>
+                            <div class="compact-stat-badge" id="cumulativeAppliedTotal">0</div>
+                        </div>
+                        <div class="compact-stat-meta">Faculty total</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-chart-pie"></i> Faculty Performance Overview
+                </div>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card" style="border-left-color: #007bff;">
+                        <h3><i class="fas fa-users"></i> Total Students</h3>
+                        <div class="value" id="totalStudents">0</div>
+                        <div class="change neutral"><i class="fas fa-minus"></i> <span id="totalStudentsChange">0%</span> from last prediction</div>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: #dc3545;">
+                        <h3><i class="fas fa-exclamation-triangle"></i> At Risk Students</h3>
+                        <div class="value" id="atRiskStudents">0</div>
+                        <div class="change neutral"><i class="fas fa-minus"></i> <span id="atRiskStudentsChange">0%</span> from last prediction</div>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: #28a745;">
+                        <h3><i class="fas fa-check-circle"></i> Predicted to Pass</h3>
+                        <div class="value" id="predictedPass">0</div>
+                        <div class="change neutral"><i class="fas fa-minus"></i> <span id="predictedPassChange">0%</span> from last prediction</div>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: #ffc107;">
+                        <h3><i class="fas fa-hands-helping"></i> Interventions Needed</h3>
+                        <div class="value" id="interventionsNeeded">0</div>
+                        <div class="change neutral"><i class="fas fa-minus"></i> <span id="interventionsNeededChange">0%</span> from last prediction</div>
+                    </div>
+                    <div class="kpi-card canvas-card" style="border-left-color: #6c757d;">
+                        <canvas id="combinedDonutChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-flag"></i> Student Risk Status & Predictions Filter
+                </div>
+                
+                <!-- Prediction Filter Tabs -->
+                <div style="margin-bottom: 30px;">
+                    <ul class="nav nav-tabs" id="predictionFilterTabs" role="tablist" style="margin-bottom: 15px; flex-wrap: wrap;">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="all-predictions-tab" data-toggle="tab" href="#all-predictions" role="tab" aria-controls="all-predictions" aria-selected="true">
+                                <i class="fas fa-list"></i> All Predictions <span class="badge badge-primary ml-2" id="allPredictionsBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="flagged-tab" data-toggle="tab" href="#flagged-predictions" role="tab" aria-controls="flagged-predictions" aria-selected="false">
+                                <i class="fas fa-flag" style="color: #dc3545;"></i> At-Risk <span class="badge badge-danger ml-2" id="flaggedBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="monitoring-tab" data-toggle="tab" href="#monitoring-predictions" role="tab" aria-controls="monitoring-predictions" aria-selected="false">
+                                <i class="fas fa-eye" style="color: #28a745;"></i> Safe <span class="badge badge-success ml-2" id="monitoringBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="passing-tab" data-toggle="tab" href="#passing-predictions" role="tab" aria-controls="passing-predictions" aria-selected="false">
+                                <i class="fas fa-check-circle" style="color: #28a745;"></i> Passing <span class="badge badge-success ml-2" id="passingBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="borderline-tab" data-toggle="tab" href="#borderline-predictions" role="tab" aria-controls="borderline-predictions" aria-selected="false">
+                                <i class="fas fa-exclamation-circle" style="color: #ffc107;"></i> Borderline <span class="badge badge-warning ml-2" id="borderlineBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="failing-tab" data-toggle="tab" href="#failing-predictions" role="tab" aria-controls="failing-predictions" aria-selected="false">
+                                <i class="fas fa-times-circle" style="color: #dc3545;"></i> Failing <span class="badge badge-danger ml-2" id="failingBadge">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="predictionFilterContent">
+                        <!-- All Predictions Tab -->
+                        <div class="tab-pane fade show active" id="all-predictions" role="tabpanel" aria-labelledby="all-predictions-tab">
+                            <div class="result-card" id="all-predictions-table"></div>
+                        </div>
+                        
+                        <!-- At-Risk (Flagged) Students Tab -->
+                        <div class="tab-pane fade" id="flagged-predictions" role="tabpanel" aria-labelledby="flagged-tab">
+                            <div class="result-card" id="flagged-result-table"></div>
+                        </div>
+                        
+                        <!-- Safe (Monitoring) Students Tab -->
+                        <div class="tab-pane fade" id="monitoring-predictions" role="tabpanel" aria-labelledby="monitoring-tab">
+                            <div class="result-card" id="monitoring-result-table"></div>
+                        </div>
+                        
+                        <!-- Passing Students Tab -->
+                        <div class="tab-pane fade" id="passing-predictions" role="tabpanel" aria-labelledby="passing-tab">
+                            <div class="result-card" id="passing-result-table"></div>
+                        </div>
+                        
+                        <!-- Borderline Students Tab -->
+                        <div class="tab-pane fade" id="borderline-predictions" role="tabpanel" aria-labelledby="borderline-tab">
+                            <div class="result-card" id="borderline-result-table"></div>
+                        </div>
+                        
+                        <!-- Failing Students Tab -->
+                        <div class="tab-pane fade" id="failing-predictions" role="tabpanel" aria-labelledby="failing-tab">
+                            <div class="result-card" id="failing-result-table"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-chart-line"></i> Faculty Predictions
+                </div>
+
+                <div class="faculty-sections-row">
+
+                <div id="engineering-section" class="faculty-column">
+                    <div class="prediction-heading">Engineering Faculty Predictions</div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card" style="border-left-color: #28a745;">
+                            <h3><i class="fas fa-check-circle"></i> Passing</h3>
+                            <div class="value" id="engineeringPassing">0</div>
+                            <div class="change neutral">0% of total</div>
+                        </div>
+                        <div class="kpi-card" style="border-left-color: #dc3545;">
+                            <h3><i class="fas fa-times-circle"></i> Failing</h3>
+                            <div class="value" id="engineeringFailing">0</div>
+                            <div class="change neutral">0% of total</div>
+                        </div>
+                        <div class="kpi-card" style="border-left-color: #ffc107;">
+                            <h3><i class="fas fa-exclamation-circle"></i> Borderline</h3>
+                            <div class="value" id="engineeringBorderline">0</div>
+                            <div class="change neutral">0% of total</div>
+                        </div>
+                        <div class="kpi-card canvas-card" style="border-left-color: #007bff;">
+                            <canvas id="engineeringDonutChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="engineering-result-table" class="result-card"></div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <div style="background-color: #8f9498; padding: 10px; border-radius: 5px; text-align: center; flex: 1;">
+                            <h6 style="color: rgb(26, 25, 25); margin: 0;">Engineering Feature Contributions (SHAP Values)</h6>
+                        </div>
+                        <button id="engineeringShapTable-toggle" class="btn btn-sm btn-warning" type="button" aria-expanded="false" aria-controls="engineeringShapTable-details">
+                            <i class="fas fa-chevron-down"></i> Expand
+                        </button>
+                    </div>
+                    <div id="engineeringShapTable-details" class="shap-canvas-container" style="display: none;">
+                        <table class="shap-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <!-- Top 10 features will be dynamically inserted -->
+                                </tr>
+                            </thead>
+                            <tbody id="engineeringShapTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                    <!-- Applied Sciences Faculty Section -->
+                    <div id="applied-sciences-section" class="faculty-column">
+                        <div class="prediction-heading">Applied Sciences Faculty Predictions</div>
+                        <div class="kpi-grid">
+                            <div class="kpi-card" style="border-left-color: #28a745;">
+                                <h3><i class="fas fa-check-circle"></i> Passing</h3>
+                                <div class="value" id="appliedPassing">0</div>
+                                <div class="change neutral">0% of total</div>
+                            </div>
+                            <div class="kpi-card" style="border-left-color: #dc3545;">
+                                <h3><i class="fas fa-times-circle"></i> Failing</h3>
+                                <div class="value" id="appliedFailing">0</div>
+                                <div class="change neutral">0% of total</div>
+                            </div>
+                            <div class="kpi-card" style="border-left-color: #ffc107;">
+                                <h3><i class="fas fa-exclamation-circle"></i> Borderline</h3>
+                                <div class="value" id="appliedBorderline">0</div>
+                                <div class="change neutral">0% of total</div>
+                            </div>
+                            <div class="kpi-card canvas-card" style="border-left-color: #007bff;">
+                                <canvas id="appliedDonutChart"></canvas>
+                            </div>
+                        </div>
+                        <div id="applied-sciences-result-table" class="result-card"></div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; margin-bottom: 10px; flex-wrap: wrap;">
+                            <div style="background-color: #8f9498; padding: 10px; border-radius: 5px; text-align: center; flex: 1;">
+                                <h6 style="color: rgb(26, 25, 25); margin: 0;">Applied Sciences Feature Contributions (SHAP Values)</h6>
+                            </div>
+                            <button id="appliedShapTable-toggle" class="btn btn-sm btn-warning" type="button" aria-expanded="false" aria-controls="appliedShapTable-details">
+                                <i class="fas fa-chevron-down"></i> Expand
+                            </button>
+                        </div>
+                        <div id="appliedShapTable-details" class="shap-canvas-container" style="display: none;">
+                            <table class="shap-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <!-- Top 10 features will be dynamically inserted -->
+                                    </tr>
+                                </thead>
+                                <tbody id="appliedShapTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            © 2025 Student Analytics Dashboard | Data Analytics Department
+        </footer>
+    </div>
+    
+    <!-- Student Details Modal -->
+    <div class="modal fade" id="studentDetailsModal" tabindex="-1" role="dialog" aria-labelledby="studentDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentDetailsModalLabel">Student Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body student-details-modal">
+                    <div id="studentDetailsContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="flagStudentBtn">Flag for Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Email Modal -->
+    <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emailModalLabel">Send Email to Student</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="emailForm">
+                        <div class="form-group">
+                            <label for="emailTo">To:</label>
+                            <input type="email" class="form-control" id="emailTo" readonly>
+                            <small class="form-text text-muted">Emails will be forwarded to TrymoreN@dut.ac.za.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailSubject">Subject:</label>
+                            <input type="text" class="form-control" id="emailSubject" value="Academic Performance Notification">
+                        </div>
+                        <div class="form-group">
+                            <label for="emailBody">Message:</label>
+                            <textarea class="form-control" id="emailBody" rows="20">
+Dear Student,
+
+This email contains a detailed report of your academic performance prediction.
+
+Student Details
+Student ID: {student_id}
+Prediction: {prediction_status}
+
+Student Data
+{student_data}
+
+Prediction Details
+Pass Probability: {pass_probability}%
+Fail Probability: {fail_probability}%
+Confidence: {confidence}%
+Intervention Needed: {intervention_needed}
+Flagged: {flagged}
+
+Top Positive Factors
+{positive_factors}
+
+Top Negative Factors
+{negative_factors}
+
+Please find attached your detailed performance report.
+
+Best regards,
+Academic Support Team
+                            </textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Attachment:</label>
+                            <div class="form-control" id="attachmentInfo" style="height: auto;">
+                                Student performance report (auto-generated)
+                                <button type="button" class="btn btn-sm btn-info ml-2" id="previewAttachmentBtn">Preview Report</button>
+                            </div>
+                        </div>
+                        <div class="form-group" id="pdfPreviewContainer" style="display: none;">
+                            <label>Attachment Preview:</label>
+                            <iframe id="pdfPreview"></iframe>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="sendEmailBtn">Send Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyModalLabel">Prediction History</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="historyTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="engineering-history-tab" data-toggle="tab" href="#engineering-history" role="tab" aria-controls="engineering-history" aria-selected="true">Engineering</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="applied-history-tab" data-toggle="tab" href="#applied-history" role="tab" aria-controls="applied-history" aria-selected="false">Applied Sciences</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="historyTabContent">
+                        <div class="tab-pane fade show active" id="engineering-history" role="tabpanel" aria-labelledby="engineering-history-tab">
+                            <h5 class="mt-3">Summary Statistics</h5>
+                            <table class="table table-striped table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Students</th>
+                                        <th>At Risk</th>
+                                        <th>Predicted Pass</th>
+                                        <th>Interventions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="engineeringHistoryTable"></tbody>
+                            </table>
+                            <h5>Detailed Predictions</h5>
+                            <table class="table table-striped table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Student ID</th>
+                                        <th>Prediction</th>
+                                        <th>Pass Probability</th>
+                                        <th>Fail Probability</th>
+                                        <th>Confidence</th>
+                                        <th>Top 5 SHAP Factors</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="engineeringDetailedHistoryTable"></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="applied-history" role="tabpanel" aria-labelledby="applied-history-tab">
+                            <h5 class="mt-3">Summary Statistics</h5>
+                            <table class="table table-striped table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Students</th>
+                                        <th>At Risk</th>
+                                        <th>Predicted Pass</th>
+                                        <th>Interventions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appliedHistoryTable"></tbody>
+                            </table>
+                            <h5>Detailed Predictions</h5>
+                            <table class="table table-striped table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Student ID</th>
+                                        <th>Prediction</th>
+                                        <th>Pass Probability</th>
+                                        <th>Fail Probability</th>
+                                        <th>Confidence</th>
+                                        <th>Top 5 SHAP Factors</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appliedDetailedHistoryTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Data storage for predictions history
+        const predictionHistory = {
+            engineering: [],
+            applied_sciences: []
+        };
+        
+        // Detailed predictions storage
+        const detailedPredictions = {
+            engineering: [],
+            applied_sciences: []
+        };
+        
+        // Flagged students storage
+        const flaggedStudents = JSON.parse(localStorage.getItem('flaggedStudents')) || [];
+        
+        // Cumulative predictions tracking
+        function normalizeCumulativeStats(rawStats) {
+            const stats = rawStats || {};
+            return {
+                totalPredictionsMade: Number(stats.totalPredictionsMade) || 0,
+                totalPassing: Number(stats.totalPassing) || 0,
+                totalBorderline: Number(stats.totalBorderline) || 0,
+                totalFailing: Number(stats.totalFailing) || 0,
+                totalEngineering: Number(stats.totalEngineering) || 0,
+                totalApplied: Number(stats.totalApplied) || 0,
+                allStudents: Array.isArray(stats.allStudents) ? stats.allStudents : [],
+                lastUpdated: stats.lastUpdated || new Date().toISOString()
+            };
+        }
+
+        const cumulativeStats = normalizeCumulativeStats(JSON.parse(localStorage.getItem('cumulativeStats')));
+
+        const CUMULATIVE_DESIGN_STORAGE_KEY = 'cumulativeStatsDesign';
+        const CUMULATIVE_DESIGN_CURRENT = 'current';
+        const CUMULATIVE_DESIGN_PREVIOUS = 'previous';
+        const CUMULATIVE_DESIGN_GLASS = 'glass';
+
+        function applyCumulativeDesign(design) {
+            const validDesigns = [CUMULATIVE_DESIGN_CURRENT, CUMULATIVE_DESIGN_PREVIOUS, CUMULATIVE_DESIGN_GLASS];
+            const selectedDesign = validDesigns.includes(design) ? design : CUMULATIVE_DESIGN_CURRENT;
+            document.body.setAttribute('data-cumulative-design', selectedDesign);
+            localStorage.setItem(CUMULATIVE_DESIGN_STORAGE_KEY, selectedDesign);
+
+            const designSelect = document.getElementById('cumulativeDesignSelect');
+            if (designSelect && designSelect.value !== selectedDesign) {
+                designSelect.value = selectedDesign;
+            }
+
+            // Clear any active glass selection when switching away
+            if (selectedDesign !== CUMULATIVE_DESIGN_GLASS) {
+                document.querySelectorAll('.compact-stats-grid .compact-stat-card')
+                    .forEach(c => c.classList.remove('selected'));
+            }
+        }
+
+        function getPreferredCumulativeDesign() {
+            return localStorage.getItem(CUMULATIVE_DESIGN_STORAGE_KEY) || CUMULATIVE_DESIGN_CURRENT;
+        }
+
+        // Dashboard sample size configuration
+        const SAMPLE_SIZE_STORAGE_KEY = 'dashboardSampleSize';
+        // Default to auto and migrate any previous fixed-size saved value.
+        let currentSampleSizeSetting = localStorage.getItem(SAMPLE_SIZE_STORAGE_KEY) || 'auto';
+        if (currentSampleSizeSetting !== 'auto') {
+            const parsed = parseInt(currentSampleSizeSetting, 10);
+            if (Number.isNaN(parsed) || parsed < 1 || parsed > 100) {
+                currentSampleSizeSetting = 'auto';
+            } else {
+                // Migrate previous fixed settings to auto so total students can vary by default.
+                currentSampleSizeSetting = 'auto';
+            }
+            localStorage.setItem(SAMPLE_SIZE_STORAGE_KEY, currentSampleSizeSetting);
+        }
+        
+        // Current month's data storage
+        let currentMonthData = {
+            engineering: [],
+            applied_sciences: []
+        };
+
+        // Tracks the previous KPI snapshot so changes are computed from last prediction.
+        let previousKpiSnapshot = null;
+        
+        // Chart instances to allow updates
+        let engineeringDonutChart = null;
+        let appliedDonutChart = null;
+        let combinedDonutChart = null;
+        
+        // Background images
+        const images = [
+            "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')"
+        ];
+        let currentIndex = 0;
+
+        function changeBackground() {
+            document.getElementById('bgImage').style.backgroundImage = images[currentIndex];
+            currentIndex = (currentIndex + 1) % images.length;
+            setTimeout(changeBackground, 4000);
+        }
+
+        changeBackground();
+        
+        // Function to generate random eight-digit student ID
+        function generateStudentId() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+        
+        // Function to determine if intervention is needed
+        function needsIntervention(result) {
+            return result === 'Failing' || result === 'Borderline' ? 'Yes' : 'No';
+        }
+        
+        // Simulated prediction function to replace API call
+        function getModelPrediction(studentData, faculty) {
+            const randomAdjust = Math.random();
+            let passProbability;
+            let predictionResult;
+
+            if (randomAdjust < 0.7) {
+                passProbability = Math.random() * (0.9 - 0.55) + 0.55;
+                predictionResult = 'Passing';
+            } else if (randomAdjust < 0.9) {
+                passProbability = Math.random() * (0.55 - 0.50) + 0.50;
+                predictionResult = 'Borderline';
+            } else {
+                passProbability = Math.random() * 0.50;
+                predictionResult = 'Failing';
+            }
+
+            const shapValues = {};
+            Object.keys(studentData).forEach(key => {
+                shapValues[key] = (Math.random() - 0.5) * 1.0;
+                if (predictionResult === 'Passing' && Math.random() < 0.7) {
+                    shapValues[key] = Math.abs(shapValues[key]);
+                } else if (predictionResult === 'Failing' && Math.random() < 0.7) {
+                    shapValues[key] = -Math.abs(shapValues[key]);
+                }
+            });
+
+            return {
+                student_id: generateStudentId(),
+                student_data: studentData,
+                result: predictionResult,
+                pass_probability: passProbability,
+                fail_probability: 1 - passProbability,
+                confidence: Math.abs(passProbability - (1 - passProbability)),
+                shap_values: shapValues,
+                faculty: faculty,
+                timestamp: new Date().toISOString(),
+                email: `${generateStudentId()}@dut.ac.za`
+            };
+        }
+        
+        // Function to generate Engineering student data
+        function generateEngineeringStudent() {
+            return {
+                Gender: ['F', 'M'][Math.floor(Math.random() * 2)],
+                LecturerTitle: ['Mr/Mrs', 'DR', 'ASSO', 'PROF', 'ADJ'][Math.floor(Math.random() * 5)],
+                Language: ['ZULU', 'ENGLISH', 'XHOSA', 'OTHER'][Math.floor(Math.random() * 4)],
+                Race: ['AFRICAN', 'INDIAN', 'OTHER'][Math.floor(Math.random() * 3)],
+                GapYears: Math.floor(Math.random() * 25),
+                Department: ['CIVIL ENGINEERING(MIDLANDS)', 'ELECTRONIC AND COMPUTER ENG', 'CIVIL ENG & GEOMATICS(DURBAN)', 
+                             'MECHANICAL ENGINEERING', 'CHEMICAL ENGINEERING', 'ELECTRICAL POWER ENGINEERING', 
+                             'INDUSTRIAL ENGINEERING', 'CONST MNGT & QUANT SURVEYING', 'ARCHITECT TECHNOLOGY', 
+                             'TOWN & REGIONAL PLANNING', 'FACULTY OFFICE-EBE'][Math.floor(Math.random() * 11)],
+                OfferingType: ['Durban Campus Full-time', 'Pietermaritzburg Full-time', 'INDUMISO CAMPUS FULL-TIME', 
+                               'OTHER', 'Durban Campus Part-time'][Math.floor(Math.random() * 5)],
+                FullPartTime: ['F', 'P'][Math.floor(Math.random() * 2)],
+                Quintile: Math.floor(Math.random() * 5) + 1,
+                PreviousActivity: ['OTHER', 'UNEMPLOYED', 'UNIVERSITY STUDENT', 'UPGRADING NSC', 'WORKING', 
+                                   'UPGRADED NSC', 'DEGREE STUDENT'][Math.floor(Math.random() * 7)],
+                Religion: ['CHRISTIAN', 'OTHER', 'NAZARETH BAPTIST CHURCH', 'ZION CHRISTIAN CHURCH', 
+                           'UNKNOWN'][Math.floor(Math.random() * 5)],
+                ExaminingAuthority: ['KZ', 'KN', 'OTHER'][Math.floor(Math.random() * 3)],
+                StudentType: ['F', 'N'][Math.floor(Math.random() * 2)],
+                ResidenceIndicator: ['Yes', 'No'][Math.floor(Math.random() * 2)],
+                MaritalStatus: ['S', 'OTHER', 'M'][Math.floor(Math.random() * 3)],
+                MatricDescrip: ['NSC DEG', 'OTHER', 'NSC DIP'][Math.floor(Math.random() * 3)],
+                StudentTypeDescription: ['NORMAL STUDENT', 'SADC STUDENT', 'REFUGEE', 'INTERNATIONAL STUDENT'][Math.floor(Math.random() * 4)],
+                FinalYearSymbol: Math.floor(Math.random() * 7) + 1,
+                AgeGroup: ['Teenager', 'YoungAdult'][Math.floor(Math.random() * 2)]
+            };
+        }
+        
+        // Function to generate Applied Sciences student data
+        function generateAppliedSciencesStudent() {
+            return {
+                Gender: ['F', 'M'][Math.floor(Math.random() * 2)],
+                LecturerTitle: ['Mr/Mrs', 'DR', 'ASSO', 'PROF', 'ADJ'][Math.floor(Math.random() * 5)],
+                Language: ['ZULU', 'ENGLISH', 'XHOSA', 'OTHER'][Math.floor(Math.random() * 4)],
+                Race: ['AFRICAN', 'INDIAN', 'OTHER'][Math.floor(Math.random() * 3)],
+                GapYears: Math.floor(Math.random() * 25),
+                Department: ['Adult', 'MARITIME STUDIES', 'BIOTECHNOLOGY & FOOD SCIENCE', 'HORTICULTURE', 
+                             'SPORT STUDIES', 'DEPT OF TEXTILE SC & APP TECH', 'FOOD & NUTRIT CONSUMER SCIENCE', 
+                             'CHEMISTRY', 'MATHEMATICS'][Math.floor(Math.random() * 9)],
+                OfferingType: ['Durban Campus Full-time', 'Pietermaritzburg Full-time', 'INDUMISO CAMPUS FULL-TIME', 
+                               'OTHER', 'Durban Campus Part-time'][Math.floor(Math.random() * 5)],
+                FullPartTime: ['F', 'P'][Math.floor(Math.random() * 2)],
+                Quintile: Math.floor(Math.random() * 5) + 1,
+                PreviousActivity: ['OTHER', 'UNEMPLOYED', 'UNIVERSITY STUDENT', 'UPGRADING NSC', 'WORKING', 
+                                   'UPGRADED NSC', 'DEGREE STUDENT'][Math.floor(Math.random() * 7)],
+                Religion: ['CHRISTIAN', 'OTHER', 'NAZARETH BAPTIST CHURCH', 'ZION CHRISTIAN CHURCH', 
+                           'UNKNOWN'][Math.floor(Math.random() * 5)],
+                ExaminingAuthority: ['KZ', 'KN', 'OTHER'][Math.floor(Math.random() * 3)],
+                StudentType: ['F', 'N'][Math.floor(Math.random() * 2)],
+                ResidenceIndicator: ['Yes', 'No'][Math.floor(Math.random() * 2)],
+                MaritalStatus: ['S', 'OTHER', 'M'][Math.floor(Math.random() * 3)],
+                MatricDescrip: ['NSC DEG', 'OTHER', 'NSC DIP'][Math.floor(Math.random() * 3)],
+                StudentTypeDescription: ['NORMAL STUDENT', 'SADC STUDENT', 'REFUGEE', 'INTERNATIONAL STUDENT'][Math.floor(Math.random() * 4)],
+                FinalYearSymbol: Math.floor(Math.random() * 7) + 1,
+                AgeGroup: ['Teenager', 'YoungAdult'][Math.floor(Math.random() * 2)]
+            };
+        }
+        
+        // Fetch real-time predictions from backend (sampled real rows + frozen models/scalers)
+        async function generateDummyData() {
+            let requestedSize;
+            if (currentSampleSizeSetting === 'auto') {
+                requestedSize = Math.floor(Math.random() * (30 - 8 + 1)) + 8;
+            } else {
+                requestedSize = parseInt(currentSampleSizeSetting, 10);
+            }
+
+            const response = await axios.get('/api/realtime-predictions', {
+                params: { size: requestedSize }
+            });
+            const payload = response.data || {};
+
+            return {
+                engineering: payload.engineering || [],
+                applied_sciences: payload.applied_sciences || []
+            };
+        }
+        
+        // Function to generate PDF report for a student
+        function generateStudentReport(student) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Student Performance Report', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text('Generated on: ' + new Date().toLocaleDateString(), 105, 25, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.text('Student Information', 14, 35);
+            doc.setFontSize(12);
+            
+            let yPos = 45;
+            doc.text(`Student ID: ${student.student_id}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Faculty: ${student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Prediction: ${student.result}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Pass Probability: ${(student.pass_probability * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 10;
+            doc.text(`Fail Probability: ${(student.fail_probability * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(14);
+            doc.text('Key Performance Factors', 14, yPos);
+            doc.setFontSize(12);
+            yPos += 10;
+            
+            const shapEntries = Object.entries(student.shap_values);
+            shapEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+            
+            shapEntries.slice(0, 12).forEach(([factor, value], index) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                doc.text(`${factor.replace(/_/g, ' ')}: ${value > 0 ? '+' : ''}${value.toFixed(4)}`, 20, yPos);
+                yPos += 8;
+            });
+            
+            doc.setFontSize(10);
+            doc.text('Confidential - For academic use only', 105, 285, { align: 'center' });
+            
+            return doc;
+        }
+        
+        // Function to preview the PDF report
+        function previewStudentReport(student) {
+            const pdfDoc = generateStudentReport(student);
+            const pdfDataUri = pdfDoc.output('datauristring');
+            const pdfPreview = document.getElementById('pdfPreview');
+            if (pdfPreview) {
+                pdfPreview.src = pdfDataUri;
+                document.getElementById('pdfPreviewContainer').style.display = 'block';
+            }
+        }
+        
+        // Function to send email via server-side API
+        async function sendEmailToStudent(student, subject, body) {
+            const pdfDoc = generateStudentReport(student);
+            const pdfData = pdfDoc.output('datauristring').split(',')[1]; // Get base64 data
+            
+            const payload = {
+                to: 'TrymoreN@dut.ac.za', // Override to specified email
+                subject: subject,
+                body: body,
+                attachment: {
+                    filename: `Student_${student.student_id}_Report.pdf`,
+                    content: pdfData,
+                    encoding: 'base64'
+                },
+                originalRecipient: student.email
+            };
+            
+            try {
+                const response = await axios.post('/api/send-email', payload);
+                $('#emailModal').modal('hide');
+                Swal.fire({
+                    title: 'Email Sent',
+                    html: `Email successfully sent to <strong>TrymoreN@dut.ac.za</strong><br>
+                           (Originally intended for: ${student.email})<br>
+                           A PDF report was attached.`,
+                    icon: 'success'
+                });
+            } catch (error) {
+                console.error('Error sending email:', error.message);
+                Swal.fire({
+                    title: 'Email Failed',
+                    text: 'Failed to send email. Please check the console for details.',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function buildKpiSnapshot(data) {
+            const engineering = data.engineering || [];
+            const applied = data.applied_sciences || [];
+
+            const totalStudents = engineering.length + applied.length;
+            const atRiskStudents = engineering.filter(s => s.result === 'Failing' || s.result === 'Borderline').length +
+                applied.filter(s => s.result === 'Failing' || s.result === 'Borderline').length;
+            const predictedPass = engineering.filter(s => s.result === 'Passing').length +
+                applied.filter(s => s.result === 'Passing').length;
+            const interventionsNeeded = engineering.filter(s => needsIntervention(s.result) === 'Yes').length +
+                applied.filter(s => needsIntervention(s.result) === 'Yes').length;
+
+            return {
+                totalStudents,
+                atRiskStudents,
+                predictedPass,
+                interventionsNeeded
+            };
+        }
+
+        function calculatePercentChange(currentValue, previousValue) {
+            if (previousValue === null || previousValue === undefined) return 0;
+            if (previousValue === 0) return currentValue === 0 ? 0 : 100;
+            return ((currentValue - previousValue) / previousValue) * 100;
+        }
+
+        function renderChangeIndicator(elementId, changeValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const rounded = Number(changeValue.toFixed(1));
+            const absRounded = Math.abs(rounded);
+            const parent = element.parentElement;
+            if (!parent) return;
+
+            parent.classList.remove('positive', 'negative', 'neutral');
+            if (rounded > 0) {
+                parent.classList.add('positive');
+                parent.innerHTML = `<i class="fas fa-arrow-up"></i> <span id="${elementId}">${rounded.toFixed(1)}%</span> from last prediction`;
+            } else if (rounded < 0) {
+                parent.classList.add('negative');
+                parent.innerHTML = `<i class="fas fa-arrow-down"></i> <span id="${elementId}">${absRounded.toFixed(1)}%</span> from last prediction`;
+            } else {
+                parent.classList.add('neutral');
+                parent.innerHTML = `<i class="fas fa-minus"></i> <span id="${elementId}">0.0%</span> from last prediction`;
+            }
+        }
+
+        // Function to update KPI cards
+        function updateKPIs(data) {
+            const currentSnapshot = buildKpiSnapshot(data);
+            const previousSnapshot = previousKpiSnapshot;
+
+            const currentTotalEngineering = data.engineering.length;
+            const currentTotalApplied = data.applied_sciences.length;
+            
+            const currentAtRiskEngineering = data.engineering.filter(s => s.result === 'Failing' || s.result === 'Borderline').length;
+            const currentAtRiskApplied = data.applied_sciences.filter(s => s.result === 'Failing' || s.result === 'Borderline').length;
+            
+            const currentPredictedPassEngineering = data.engineering.filter(s => s.result === 'Passing').length;
+            const currentPredictedPassApplied = data.applied_sciences.filter(s => s.result === 'Passing').length;
+            
+            const currentInterventionsEngineering = data.engineering.filter(s => needsIntervention(s.result) === 'Yes').length;
+            const currentInterventionsApplied = data.applied_sciences.filter(s => needsIntervention(s.result) === 'Yes').length;
+
+            const atRiskStudents = currentSnapshot.atRiskStudents;
+            const predictedPass = currentSnapshot.predictedPass;
+            const interventionsNeeded = currentSnapshot.interventionsNeeded;
+            const totalStudents = currentSnapshot.totalStudents;
+
+            const totalStudentsElement = document.getElementById('totalStudents');
+            if (totalStudentsElement) totalStudentsElement.textContent = totalStudents;
+
+            const atRiskStudentsElement = document.getElementById('atRiskStudents');
+            if (atRiskStudentsElement) atRiskStudentsElement.textContent = atRiskStudents;
+
+            const predictedPassElement = document.getElementById('predictedPass');
+            if (predictedPassElement) predictedPassElement.textContent = predictedPass;
+
+            const interventionsNeededElement = document.getElementById('interventionsNeeded');
+            if (interventionsNeededElement) interventionsNeededElement.textContent = interventionsNeeded;
+
+            const totalStudentsChange = calculatePercentChange(
+                currentSnapshot.totalStudents,
+                previousSnapshot ? previousSnapshot.totalStudents : null
+            );
+            const atRiskStudentsChange = calculatePercentChange(
+                currentSnapshot.atRiskStudents,
+                previousSnapshot ? previousSnapshot.atRiskStudents : null
+            );
+            const predictedPassChange = calculatePercentChange(
+                currentSnapshot.predictedPass,
+                previousSnapshot ? previousSnapshot.predictedPass : null
+            );
+            const interventionsNeededChange = calculatePercentChange(
+                currentSnapshot.interventionsNeeded,
+                previousSnapshot ? previousSnapshot.interventionsNeeded : null
+            );
+
+            renderChangeIndicator('totalStudentsChange', totalStudentsChange);
+            renderChangeIndicator('atRiskStudentsChange', atRiskStudentsChange);
+            renderChangeIndicator('predictedPassChange', predictedPassChange);
+            renderChangeIndicator('interventionsNeededChange', interventionsNeededChange);
+
+            previousKpiSnapshot = currentSnapshot;
+            
+            const engineeringPassingElement = document.getElementById('engineeringPassing');
+            if (engineeringPassingElement) engineeringPassingElement.textContent = currentPredictedPassEngineering;
+
+            const engineeringFailingElement = document.getElementById('engineeringFailing');
+            if (engineeringFailingElement) engineeringFailingElement.textContent = data.engineering.filter(s => s.result === 'Failing').length;
+
+            const engineeringBorderlineElement = document.getElementById('engineeringBorderline');
+            if (engineeringBorderlineElement) engineeringBorderlineElement.textContent = data.engineering.filter(s => s.result === 'Borderline').length;
+            
+            const appliedPassingElement = document.getElementById('appliedPassing');
+            if (appliedPassingElement) appliedPassingElement.textContent = currentPredictedPassApplied;
+
+            const appliedFailingElement = document.getElementById('appliedFailing');
+            if (appliedFailingElement) appliedFailingElement.textContent = data.applied_sciences.filter(s => s.result === 'Failing').length;
+
+            const appliedBorderlineElement = document.getElementById('appliedBorderline');
+            if (appliedBorderlineElement) appliedBorderlineElement.textContent = data.applied_sciences.filter(s => s.result === 'Borderline').length;
+            
+            const updatePercentages = (faculty, passing, failing, borderline) => {
+                const total = passing + failing + borderline;
+                if (total > 0) {
+                    const passingElement = document.querySelector(`#${faculty}Passing + .change`);
+                    if (passingElement) passingElement.textContent = `${Math.round((passing / total) * 100)}% of total`;
+
+                    const failingElement = document.querySelector(`#${faculty}Failing + .change`);
+                    if (failingElement) failingElement.textContent = `${Math.round((failing / total) * 100)}% of total`;
+
+                    const borderlineElement = document.querySelector(`#${faculty}Borderline + .change`);
+                    if (borderlineElement) borderlineElement.textContent = `${Math.round((borderline / total) * 100)}% of total`;
+                }
+            };
+            
+            updatePercentages('engineering', 
+                currentPredictedPassEngineering, 
+                data.engineering.filter(s => s.result === 'Failing').length, 
+                data.engineering.filter(s => s.result === 'Borderline').length);
+            
+            updatePercentages('applied', 
+                currentPredictedPassApplied, 
+                data.applied_sciences.filter(s => s.result === 'Failing').length, 
+                data.applied_sciences.filter(s => s.result === 'Borderline').length);
+            
+            // Combined metrics for all students
+            const combinedTotal = currentTotalEngineering + currentTotalApplied;
+            const combinedPassing = currentPredictedPassEngineering + currentPredictedPassApplied;
+            const combinedFailing = data.engineering.filter(s => s.result === 'Failing').length + 
+                                    data.applied_sciences.filter(s => s.result === 'Failing').length;
+            const combinedBorderline = data.engineering.filter(s => s.result === 'Borderline').length + 
+                                      data.applied_sciences.filter(s => s.result === 'Borderline').length;
+
+            // Update donut charts
+            const updateDonutChart = (canvasId, passing, failing, borderline, title, chartInstance) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                
+                const total = passing + failing + borderline;
+                const data = total > 0 ? [passing, failing, borderline] : [0, 0, 0];
+                
+                let targetChart;
+                if (canvasId === 'engineeringDonutChart') targetChart = engineeringDonutChart;
+                else if (canvasId === 'appliedDonutChart') targetChart = appliedDonutChart;
+                else targetChart = combinedDonutChart;
+
+                if (targetChart) {
+                    targetChart.data.datasets[0].data = data;
+                    targetChart.update();
+                    return;
+                }
+                
+                const newChart = new Chart(canvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Passing', 'Failing', 'Borderline'],
+                        datasets: [{
+                            data: data,
+                            backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                            borderColor: ['#1e7e34', '#c82333', '#e0a800'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    font: {
+                                        size: 12
+                                    },
+                                    color: '#495057'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: title,
+                                color: '#495057',
+                                font: {
+                                    size: 12
+                                },
+                                padding: {
+                                    top: 5,
+                                    bottom: 5
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.parsed || 0;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${context.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '60%' // Makes it a donut chart
+                    }
+                });
+                
+                if (canvasId === 'engineeringDonutChart') {
+                    engineeringDonutChart = newChart;
+                } else if (canvasId === 'appliedDonutChart') {
+                    appliedDonutChart = newChart;
+                } else {
+                    combinedDonutChart = newChart;
+                }
+            };
+            
+            updateDonutChart('engineeringDonutChart', 
+                currentPredictedPassEngineering, 
+                data.engineering.filter(s => s.result === 'Failing').length, 
+                data.engineering.filter(s => s.result === 'Borderline').length, 
+                'Engineering Predictions', engineeringDonutChart);
+            
+            updateDonutChart('appliedDonutChart', 
+                currentPredictedPassApplied, 
+                data.applied_sciences.filter(s => s.result === 'Failing').length, 
+                data.applied_sciences.filter(s => s.result === 'Borderline').length, 
+                'Applied Sciences Predictions', appliedDonutChart);
+            
+            updateDonutChart('combinedDonutChart', 
+                combinedPassing, 
+                combinedFailing, 
+                combinedBorderline, 
+                'Combined Predictions', combinedDonutChart);
+        }
+        
+        // Function to get top 10 features by average absolute SHAP value
+        function getTop10Features(data) {
+            if (!data || data.length === 0) return [];
+
+            const featureSums = {};
+            const featureCounts = {};
+            data.forEach(student => {
+                Object.entries(student.shap_values).forEach(([feature, value]) => {
+                    featureSums[feature] = (featureSums[feature] || 0) + Math.abs(value);
+                    featureCounts[feature] = (featureCounts[feature] || 0) + 1;
+                });
+            });
+
+            const featureAverages = {};
+            Object.keys(featureSums).forEach(feature => {
+                featureAverages[feature] = featureSums[feature] / featureCounts[feature];
+            });
+
+            const sortedFeatures = Object.entries(featureAverages)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(entry => entry[0]);
+
+            return sortedFeatures;
+        }
+
+        // Function to update SHAP table in long format with top 10 features
+        function updateShapTable(tableId, data) {
+            const tableBody = document.getElementById(tableId);
+            const tableHead = tableBody.parentElement.querySelector('thead tr');
+            if (!tableBody || !tableHead) return;
+
+            const topFeatures = getTop10Features(data);
+
+            let headerHtml = '<th>Student ID</th>';
+            topFeatures.forEach(feature => {
+                headerHtml += `<th>${feature.replace(/_/g, ' ')}</th>`;
+            });
+            tableHead.innerHTML = headerHtml;
+
+            let tableHtml = '';
+            data.forEach(student => {
+                let rowHtml = '<tr>';
+                rowHtml += `<td>${student.student_id}</td>`;
+                topFeatures.forEach(feature => {
+                    const shapValue = student.shap_values[feature] || 0;
+                    rowHtml += `<td class="${shapValue >= 0 ? 'positive' : 'negative'}">${shapValue.toFixed(4)}</td>`;
+                });
+                rowHtml += '</tr>';
+                tableHtml += rowHtml;
+            });
+
+            tableBody.innerHTML = tableHtml || '<tr><td colspan="' + (topFeatures.length + 1) + '" class="text-center">No SHAP values available</td></tr>';
+        }
+        
+        // Function to update faculty section
+        function updateFacultySection(faculty, data) {
+            const facultyName = faculty === 'engineering' ? 'Engineering' : 'Applied Sciences';
+            const tableId = `${faculty}-result-table`;
+            const shapTableId = faculty === 'engineering' ? 'engineeringShapTable' : 'appliedShapTable';
+            
+            console.log(`Updating ${facultyName} section with ${data.length} students`);
+            
+            const tableDetailsId = `${tableId}-details`;
+            const tableToggleId = `${tableId}-toggle`;
+            const shapDetailsId = `${shapTableId}-details`;
+            const shapToggleId = `${shapTableId}-toggle`;
+            
+            let tableHtml = `
+                <div style="margin-bottom: 10px;">
+                    <div class="faculty-prediction-header">
+                        <h5><i class="fas fa-table"></i> ${facultyName} Predictions (${data.length} total)</h5>
+                        <button
+                            id="${tableToggleId}"
+                            class="btn btn-sm btn-warning faculty-prediction-toggle"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="${tableDetailsId}">
+                            <i class="fas fa-chevron-down"></i> Expand
+                        </button>
+                    </div>
+                </div>
+                <div id="${tableDetailsId}" style="overflow-x: auto; display: none;">
+                    <table class="result-table">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Prediction</th>
+                            <th>Pass Probability</th>
+                            <th>Fail Probability</th>
+                            <th>Confidence</th>
+                            <th>Intervention Needed</th>
+                            <th>Actions</th>
+                        </tr>
+            `;
+            
+            if (data.length === 0) {
+                tableHtml += `
+                    <tr>
+                        <td colspan="7" class="text-center">No predictions available</td>
+                    </tr>
+                `;
+            } else {
+                data.forEach(student => {
+                    const interventionNeeded = needsIntervention(student.result);
+                    tableHtml += `
+                        <tr>
+                            <td>${student.student_id}</td>
+                            <td class="${student.result.toLowerCase()}">${student.result}</td>
+                            <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                            <td>${(student.fail_probability * 100).toFixed(2)}%</td>
+                            <td>${(student.confidence * 100).toFixed(2)}%</td>
+                            <td class="${interventionNeeded === 'Yes' ? 'intervention' : ''}">${interventionNeeded}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-info view-details" data-id="${student.student_id}" data-faculty="${faculty}">
+                                    Details
+                                </button>
+                                <button class="btn btn-sm btn-primary email-student" 
+                                        data-id="${student.student_id}" 
+                                        data-faculty="${faculty}"
+                                        data-email="${student.email}">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tableHtml += `
+                    </table>
+                </div>
+            `;
+            const tableElement = document.getElementById(tableId);
+            if (tableElement) {
+                tableElement.innerHTML = tableHtml;
+                
+                // Wire up table toggle button
+                const tableToggleBtn = tableElement.querySelector(`#${tableToggleId}`);
+                const tableDetailsDiv = tableElement.querySelector(`#${tableDetailsId}`);
+                if (tableToggleBtn && tableDetailsDiv) {
+                    tableToggleBtn.addEventListener('click', function() {
+                        const isCollapsed = tableDetailsDiv.style.display === 'none';
+                        tableDetailsDiv.style.display = isCollapsed ? 'block' : 'none';
+                        this.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+                        this.innerHTML = isCollapsed
+                            ? '<i class="fas fa-chevron-up"></i> Collapse'
+                            : '<i class="fas fa-chevron-down"></i> Expand';
+                    });
+                }
+            }
+            
+            updateShapTable(shapTableId, data);
+            
+            // Wire up SHAP toggle button
+            const shapToggleBtn = document.getElementById(`${shapToggleId}`);
+            const shapDetailsDiv = document.getElementById(`${shapDetailsId}`);
+            if (shapToggleBtn && shapDetailsDiv) {
+                shapToggleBtn.addEventListener('click', function() {
+                    const isCollapsed = shapDetailsDiv.style.display === 'none';
+                    shapDetailsDiv.style.display = isCollapsed ? 'block' : 'none';
+                    this.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+                    this.innerHTML = isCollapsed
+                        ? `<i class="fas fa-chevron-up"></i> Collapse`
+                        : `<i class="fas fa-chevron-down"></i> Expand`;
+                });
+            }
+            
+            const buttons = document.querySelectorAll(`#${tableId} .view-details`);
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    showStudentDetails(studentId, faculty);
+                });
+            });
+            
+            const emailButtons = document.querySelectorAll(`#${tableId} .email-student`);
+            emailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    const email = this.getAttribute('data-email');
+                    
+                    let student;
+                    if (faculty === 'engineering') {
+                        student = currentMonthData.engineering.find(s => s.student_id === studentId);
+                    } else {
+                        student = currentMonthData.applied_sciences.find(s => s.student_id === studentId);
+                    }
+                    
+                    if (!student) {
+                        Swal.fire('Error', 'Student not found', 'error');
+                        return;
+                    }
+                    
+                    document.getElementById('emailTo').value = email;
+                    
+                    const isFlagged = flaggedStudents.some(s => s.student_id === studentId && s.faculty === faculty);
+                    const shapEntries = Object.entries(student.shap_values);
+                    const positiveFactors = shapEntries
+                        .filter(([_, value]) => value > 0)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: +${value.toFixed(4)}`)
+                        .join('\n');
+                    const negativeFactors = shapEntries
+                        .filter(([_, value]) => value < 0)
+                        .sort((a, b) => a[1] - b[1])
+                        .slice(0, 5)
+                        .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}`)
+                        .join('\n');
+                    let studentDataHtml = '';
+                    Object.entries(student.student_data).forEach(([key, value]) => {
+                        studentDataHtml += `${key.replace(/_/g, ' ')}\t${value}\n`;
+                    });
+
+                    let emailBody = document.getElementById('emailBody').value;
+                    emailBody = emailBody
+                        .replace('{student_id}', student.student_id)
+                        .replace('{prediction_status}', student.result)
+                        .replace('{pass_probability}', (student.pass_probability * 100).toFixed(2))
+                        .replace('{fail_probability}', (student.fail_probability * 100).toFixed(2))
+                        .replace('{confidence}', (student.confidence * 100).toFixed(2))
+                        .replace('{intervention_needed}', needsIntervention(student.result))
+                        .replace('{flagged}', isFlagged ? 'Yes' : 'No')
+                        .replace('{student_data}', studentDataHtml)
+                        .replace('{positive_factors}', positiveFactors)
+                        .replace('{negative_factors}', negativeFactors);
+                    
+                    document.getElementById('emailBody').value = emailBody;
+                    
+                    $('#emailModal').data('student', student);
+                    $('#emailModal').modal('show');
+                });
+            });
+        }
+        
+        // Function to update flagged and monitoring predictions display
+        function updateFlaggedMonitoringStatus(data) {
+            const allStudents = [...(data.engineering || []), ...(data.applied_sciences || [])];
+            
+            // Separate flagged (pass_probability < 0.5) and monitoring (pass_probability >= 0.5)
+            const flaggedStudents = allStudents.filter(s => s.pass_probability < 0.5);
+            const monitoringStudents = allStudents.filter(s => s.pass_probability >= 0.5);
+            
+            // Update badges
+            const flaggedBadge = document.getElementById('flaggedBadge');
+            const monitoringBadge = document.getElementById('monitoringBadge');
+            
+            if (flaggedBadge) flaggedBadge.textContent = flaggedStudents.length;
+            if (monitoringBadge) monitoringBadge.textContent = monitoringStudents.length;
+            
+            // Update flagged students table
+            updatePredictionTable('flagged-result-table', flaggedStudents, 'At-Risk Students');
+            
+            // Update monitoring students table
+            updatePredictionTable('monitoring-result-table', monitoringStudents, 'Safe Students');
+        }
+        
+        // Function to update all prediction filter tabs
+        function updateAllPredictionFilters(data) {
+            const allStudents = [...(data.engineering || []), ...(data.applied_sciences || [])];
+            
+            // Separate by status
+            const allPredictions = allStudents;
+            const passingStudents = allStudents.filter(s => s.result === 'Passing');
+            const borderlineStudents = allStudents.filter(s => s.result === 'Borderline');
+            const failingStudents = allStudents.filter(s => s.result === 'Failing');
+            const atRiskStudents = allStudents.filter(s => s.pass_probability < 0.5);
+            const safeStudents = allStudents.filter(s => s.pass_probability >= 0.5);
+            
+            // Update badges
+            document.getElementById('allPredictionsBadge').textContent = allPredictions.length;
+            document.getElementById('passingBadge').textContent = passingStudents.length;
+            document.getElementById('borderlineBadge').textContent = borderlineStudents.length;
+            document.getElementById('failingBadge').textContent = failingStudents.length;
+            document.getElementById('flaggedBadge').textContent = atRiskStudents.length;
+            document.getElementById('monitoringBadge').textContent = safeStudents.length;
+            
+            // Update tables
+            updatePredictionTable('all-predictions-table', allPredictions, 'All Predictions');
+            updatePredictionTable('flagged-result-table', atRiskStudents, 'At-Risk Students');
+            updatePredictionTable('monitoring-result-table', safeStudents, 'Safe Students');
+            updatePredictionTable('passing-result-table', passingStudents, 'Passing Students');
+            updatePredictionTable('borderline-result-table', borderlineStudents, 'Borderline Students');
+            updatePredictionTable('failing-result-table', failingStudents, 'Failing Students');
+        }
+        
+        // Function to update cumulative statistics display
+        // currentBatch: optional current data object {engineering: [], applied_sciences: []}
+        // Counts show cumulative totals; percentages reflect the current batch so they update each refresh.
+        function updateCumulativeStatistics(currentBatch) {
+            const total = cumulativeStats.totalPredictionsMade;
+            
+            document.getElementById('cumulativeTotalPredictions').textContent = total;
+            document.getElementById('cumulativePassing').textContent = cumulativeStats.totalPassing;
+            document.getElementById('cumulativeBorderline').textContent = cumulativeStats.totalBorderline;
+            document.getElementById('cumulativeFailing').textContent = cumulativeStats.totalFailing;
+            document.getElementById('cumulativeEngineeringTotal').textContent = cumulativeStats.totalEngineering;
+            document.getElementById('cumulativeAppliedTotal').textContent = cumulativeStats.totalApplied;
+            
+            // Use current batch for percentages so they change on every refresh
+            const batchStudents = currentBatch
+                ? [...(currentBatch.engineering || []), ...(currentBatch.applied_sciences || [])]
+                : null;
+            const batchTotal = batchStudents ? batchStudents.length : 0;
+
+            if (batchTotal > 0) {
+                const batchPassing    = batchStudents.filter(s => s.result === 'Passing').length;
+                const batchBorderline = batchStudents.filter(s => s.result === 'Borderline').length;
+                const batchFailing    = batchStudents.filter(s => s.result === 'Failing').length;
+                document.getElementById('cumulativePassingPercent').textContent    = Math.round((batchPassing    / batchTotal) * 100) + '%';
+                document.getElementById('cumulativeBorderlinePercent').textContent = Math.round((batchBorderline / batchTotal) * 100) + '%';
+                document.getElementById('cumulativeFailingPercent').textContent    = Math.round((batchFailing    / batchTotal) * 100) + '%';
+            } else if (total > 0) {
+                // Fallback to cumulative percentages on initial load (no batch yet)
+                document.getElementById('cumulativePassingPercent').textContent    = Math.round((cumulativeStats.totalPassing    / total) * 100) + '%';
+                document.getElementById('cumulativeBorderlinePercent').textContent = Math.round((cumulativeStats.totalBorderline / total) * 100) + '%';
+                document.getElementById('cumulativeFailingPercent').textContent    = Math.round((cumulativeStats.totalFailing    / total) * 100) + '%';
+            } else {
+                document.getElementById('cumulativePassingPercent').textContent    = '0%';
+                document.getElementById('cumulativeBorderlinePercent').textContent = '0%';
+                document.getElementById('cumulativeFailingPercent').textContent    = '0%';
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('cumulativeStats', JSON.stringify(cumulativeStats));
+        }
+        
+        // Function to add predictions to cumulative storage
+        function addToCumulativeStats(data) {
+            const allStudents = [...(data.engineering || []), ...(data.applied_sciences || [])];
+            
+            allStudents.forEach(student => {
+                // Count every prediction event so cumulative totals keep increasing per refresh.
+                cumulativeStats.totalPredictionsMade++;
+                cumulativeStats.allStudents.push({
+                    student_id: student.student_id,
+                    faculty: student.faculty,
+                    result: student.result,
+                    pass_probability: student.pass_probability,
+                    timestamp: new Date().toISOString()
+                });
+                
+                if (student.result === 'Passing') cumulativeStats.totalPassing++;
+                if (student.result === 'Borderline') cumulativeStats.totalBorderline++;
+                if (student.result === 'Failing') cumulativeStats.totalFailing++;
+                
+                if (student.faculty === 'engineering') cumulativeStats.totalEngineering++;
+                if (student.faculty === 'applied_sciences') cumulativeStats.totalApplied++;
+            });
+
+            // Prevent unbounded localStorage growth while preserving recent prediction history.
+            if (cumulativeStats.allStudents.length > 5000) {
+                cumulativeStats.allStudents = cumulativeStats.allStudents.slice(-5000);
+            }
+            
+            cumulativeStats.lastUpdated = new Date().toISOString();
+            updateCumulativeStatistics(data); // pass current batch so percentages reflect latest predictions
+        }
+        
+        // Function to create prediction table for a given set of students
+        function updatePredictionTable(tableContainerId, students, title) {
+            const container = document.getElementById(tableContainerId);
+            if (!container) return;
+
+            const collapsibleTables = new Set(['flagged-result-table', 'all-predictions-table', 'monitoring-result-table', 'passing-result-table', 'borderline-result-table', 'failing-result-table']);
+            const isCollapsibleTable = collapsibleTables.has(tableContainerId);
+            const detailsSectionId = `${tableContainerId}-details`;
+            const toggleButtonId = `${tableContainerId}-toggle`;
+            const defaultCollapsed = collapsibleTables.has(tableContainerId);
+            
+            let tableHtml = `
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <h5 style="margin: 0;"><i class="fas fa-table"></i> ${title} (${students.length} total)</h5>
+                        ${isCollapsibleTable ? `
+                            <button
+                                id="${toggleButtonId}"
+                                class="btn btn-sm btn-warning"
+                                type="button"
+                                aria-expanded="${defaultCollapsed ? 'false' : 'true'}"
+                                aria-controls="${detailsSectionId}">
+                                ${defaultCollapsed ? '<i class="fas fa-chevron-down"></i> Expand ' + title : '<i class="fas fa-chevron-up"></i> Collapse ' + title}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div id="${detailsSectionId}" style="overflow-x: auto; ${defaultCollapsed ? 'display: none;' : ''}">
+                    <table class="result-table">
+                        <tr>
+                            <th>No.</th>
+                            <th>Student ID</th>
+                            <th>Faculty</th>
+                            <th>Prediction</th>
+                            <th>Pass Probability</th>
+                            <th>Fail Probability</th>
+                            <th>Confidence</th>
+                            <th>Intervention Needed</th>
+                            <th>Actions</th>
+                        </tr>
+            `;
+            
+            if (students.length === 0) {
+                tableHtml += `
+                    <tr>
+                        <td colspan="9" class="text-center" style="padding: 20px;">No students in this category</td>
+                    </tr>
+                `;
+            } else {
+                students.forEach((student, index) => {
+                    const interventionNeeded = needsIntervention(student.result);
+                    const facultyName = student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences';
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${student.student_id}</td>
+                            <td>${facultyName}</td>
+                            <td class="${student.result.toLowerCase()}">${student.result}</td>
+                            <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                            <td>${(student.fail_probability * 100).toFixed(2)}%</td>
+                            <td>${(student.confidence * 100).toFixed(2)}%</td>
+                            <td class="${interventionNeeded === 'Yes' ? 'intervention' : ''}">${interventionNeeded}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-info view-details-mini" data-id="${student.student_id}" data-faculty="${student.faculty}">
+                                    <i class="fas fa-eye"></i> Details
+                                </button>
+                                <button class="btn btn-sm btn-primary email-student-mini" 
+                                        data-id="${student.student_id}" 
+                                        data-faculty="${student.faculty}"
+                                        data-email="${student.email}">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tableHtml += `
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+
+            if (isCollapsibleTable) {
+                const toggleButton = container.querySelector(`#${toggleButtonId}`);
+                const detailsSection = container.querySelector(`#${detailsSectionId}`);
+
+                if (toggleButton && detailsSection) {
+                    toggleButton.addEventListener('click', function() {
+                        const isCollapsed = detailsSection.style.display === 'none';
+                        detailsSection.style.display = isCollapsed ? 'block' : 'none';
+                        this.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+                        this.innerHTML = isCollapsed
+                            ? '<i class="fas fa-chevron-up"></i> Collapse ' + title
+                            : '<i class="fas fa-chevron-down"></i> Expand ' + title;
+                    });
+                }
+            }
+            
+            // Wire up the detail buttons
+            const detailButtons = container.querySelectorAll('.view-details-mini');
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    showStudentDetails(studentId, faculty);
+                });
+            });
+            
+            // Wire up the email buttons
+            const emailButtons = container.querySelectorAll('.email-student-mini');
+            emailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    const email = this.getAttribute('data-email');
+                    
+                    let student;
+                    if (faculty === 'engineering') {
+                        student = currentMonthData.engineering.find(s => s.student_id === studentId);
+                    } else {
+                        student = currentMonthData.applied_sciences.find(s => s.student_id === studentId);
+                    }
+                    
+                    if (!student) {
+                        Swal.fire('Error', 'Student not found', 'error');
+                        return;
+                    }
+                    
+                    document.getElementById('emailTo').value = email;
+                    
+                    const isFlagged = flaggedStudents.some(s => s.student_id === studentId && s.faculty === faculty);
+                    const shapEntries = Object.entries(student.shap_values);
+                    const positiveFactors = shapEntries
+                        .filter(([_, value]) => value > 0)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: +${value.toFixed(4)}`)
+                        .join('\n');
+                    const negativeFactors = shapEntries
+                        .filter(([_, value]) => value < 0)
+                        .sort((a, b) => a[1] - b[1])
+                        .slice(0, 5)
+                        .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}`)
+                        .join('\n');
+                    let studentDataHtml = '';
+                    Object.entries(student.student_data).forEach(([key, value]) => {
+                        studentDataHtml += `${key.replace(/_/g, ' ')}\t${value}\n`;
+                    });
+
+                    let emailBody = document.getElementById('emailBody').value;
+                    emailBody = emailBody
+                        .replace('{student_id}', student.student_id)
+                        .replace('{prediction_status}', student.result)
+                        .replace('{pass_probability}', (student.pass_probability * 100).toFixed(2))
+                        .replace('{fail_probability}', (student.fail_probability * 100).toFixed(2))
+                        .replace('{confidence}', (student.confidence * 100).toFixed(2))
+                        .replace('{intervention_needed}', needsIntervention(student.result))
+                        .replace('{flagged}', isFlagged ? 'Yes' : 'No')
+                        .replace('{student_data}', studentDataHtml)
+                        .replace('{positive_factors}', positiveFactors)
+                        .replace('{negative_factors}', negativeFactors);
+                    
+                    document.getElementById('emailBody').value = emailBody;
+                    
+                    $('#emailModal').data('student', student);
+                    $('#emailModal').modal('show');
+                });
+            });
+        }
+        
+        // Enhanced dashboard update function with automatic flagging and emailing
+        async function updateDashboard(silent = false) {
+            console.log('Starting dashboard update');
+            
+            const resultCards = document.querySelectorAll('.result-card');
+            resultCards.forEach(card => {
+                card.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading predictions...</div>';
+            });
+
+            try {
+                const data = await generateDummyData();
+                currentMonthData = data;
+                
+                const now = new Date();
+                const historyEntry = {
+                    date: now.toISOString(),
+                    total: data.engineering.length + data.applied_sciences.length,
+                    atRisk: data.engineering.filter(s => s.result === 'Failing' || s.result === 'Borderline').length + 
+                           data.applied_sciences.filter(s => s.result === 'Failing' || s.result === 'Borderline').length,
+                    predictedPass: data.engineering.filter(s => s.result === 'Passing').length + 
+                                  data.applied_sciences.filter(s => s.result === 'Passing').length,
+                    interventions: data.engineering.filter(s => needsIntervention(s.result) === 'Yes').length + 
+                                  data.applied_sciences.filter(s => needsIntervention(s.result) === 'Yes').length,
+                    count: data.engineering.length,
+                    faculty: 'engineering'
+                };
+                
+                predictionHistory.engineering.push({
+                    ...historyEntry,
+                    count: data.engineering.length,
+                    faculty: 'engineering'
+                });
+                
+                predictionHistory.applied_sciences.push({
+                    ...historyEntry,
+                    count: data.applied_sciences.length,
+                    faculty: 'applied_sciences'
+                });
+                
+                const allStudents = [...data.engineering, ...data.applied_sciences];
+                allStudents.forEach(student => {
+                    if ((student.result === 'Failing' || student.result === 'Borderline') && 
+                        !flaggedStudents.some(s => s.student_id === student.student_id && s.faculty === student.faculty)) {
+                        flaggedStudents.push({
+                            student_id: student.student_id,
+                            faculty: student.faculty,
+                            reason: 'At risk of failing',
+                            date: new Date().toISOString(),
+                            student_data: student.student_data,
+                            prediction: student.result,
+                            pass_probability: student.pass_probability,
+                            shap_values: student.shap_values
+                        });
+                        localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+
+                        const subject = 'Academic Performance Notification';
+                        const emailBody = `
+Dear ${student.student_id},
+
+This is an automated notification regarding your academic performance prediction.
+
+Student Details
+Student ID: ${student.student_id}
+Prediction: ${student.result}
+
+Prediction Details
+Pass Probability: ${(student.pass_probability * 100).toFixed(2)}%
+Fail Probability: ${(student.fail_probability * 100).toFixed(2)}%
+Confidence: ${(student.confidence * 100).toFixed(2)}%
+Intervention Needed: ${needsIntervention(student.result)}
+Flagged: Yes
+
+Please contact your academic advisor for support.
+
+Best regards,
+Academic Support Team
+                        `;
+                       // sendEmailToStudent(student, subject, emailBody);
+                    }
+                });
+
+                data.engineering.forEach(student => {
+                    const shapEntries = Object.entries(student.shap_values);
+                    shapEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+                    const top5ShapFactors = shapEntries.slice(0, 5).map(([factor, value]) => `${factor}: ${value.toFixed(4)}`);
+                    
+                    detailedPredictions.engineering.push({
+                        date: now.toISOString(),
+                        student_id: student.student_id,
+                        result: student.result,
+                        pass_probability: student.pass_probability,
+                        fail_probability: student.fail_probability,
+                        confidence: student.confidence,
+                        top_5_shap_factors: top5ShapFactors
+                    });
+                });
+                
+                data.applied_sciences.forEach(student => {
+                    const shapEntries = Object.entries(student.shap_values);
+                    shapEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+                    const top5ShapFactors = shapEntries.slice(0, 5).map(([factor, value]) => `${factor}: ${value.toFixed(4)}`);
+                    
+                    detailedPredictions.applied_sciences.push({
+                        date: now.toISOString(),
+                        student_id: student.student_id,
+                        result: student.result,
+                        pass_probability: student.pass_probability,
+                        fail_probability: student.fail_probability,
+                        confidence: student.confidence,
+                        top_5_shap_factors: top5ShapFactors
+                    });
+                });
+                
+                updateKPIs(data);
+                updateFacultySection('engineering', data.engineering || []);
+                updateFacultySection('applied-sciences', data.applied_sciences || []);
+                updateAllPredictionFilters(data);
+                addToCumulativeStats(data);
+                
+            } catch (error) {
+                console.error('Error updating dashboard:', error.message, error.stack);
+                resultCards.forEach(card => {
+                    card.innerHTML = '<div class="text-center py-4 text-danger">Failed to load predictions. Check console for details.</div>';
+                });
+                updateKPIs(currentMonthData);
+                updateFacultySection('engineering', currentMonthData.engineering ||[]);
+                updateFacultySection('applied-sciences', currentMonthData.applied_sciences || []);
+                updateAllPredictionFilters(currentMonthData);
+                if (!silent) {
+                    Swal.fire('Error', 'Failed to update dashboard data. Check console for details.', 'error');
+                }
+            }
+        }
+        
+        // Function to show student details in modal
+        function showStudentDetails(studentId, faculty) {
+            let student;
+            
+            if (faculty === 'engineering') {
+                student = currentMonthData.engineering.find(s => s.student_id === studentId);
+            } else {
+                student = currentMonthData.applied_sciences.find(s => s.student_id === studentId);
+            }
+            
+            if (!student) {
+                Swal.fire('Error', 'Student not found', 'error');
+                return;
+            }
+            
+            const isFlagged = flaggedStudents.some(s => s.student_id === studentId && s.faculty === faculty);
+            
+            const shapEntries = Object.entries(student.shap_values);
+            const positiveFactors = shapEntries
+                .filter(([_, value]) => value > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const negativeFactors = shapEntries
+                .filter(([_, value]) => value < 0)
+                .sort((a, b) => a[1] - b[1])
+                .slice(0, 5);
+            
+            let html = `
+                <h4>Student ID: ${student.student_id}</h4>
+                <p class="mb-4"><strong>Prediction:</strong> <span class="badge badge-${
+                    student.result === 'Passing' ? 'success' : 
+                    student.result === 'Failing' ? 'danger' : 'warning'
+                }">${student.result}</span></p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Student Data</h5>
+                        <table class="student-details-table">
+            `;
+            
+            Object.keys(student.student_data).forEach(key => {
+                html += `
+                    <tr>
+                        <th>${key.replace(/_/g, ' ')}</th>
+                        <td>${student.student_data[key]}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Prediction Details</h5>
+                        <table class="student-details-table">
+                            <tr>
+                                <th>Pass Probability</th>
+                                <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Fail Probability</th>
+                                <td>${(student.fail_probability * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Confidence</th>
+                                <td>${(student.confidence * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Intervention Needed</th>
+                                <td>${needsIntervention(student.result)}</td>
+                            </tr>
+                            <tr>
+                                <th>Flagged</th>
+                                <td>${isFlagged ? 'Yes' : 'No'}</td>
+                            </tr>
+                        </table>
+                        
+                        <h5 class="mt-4">Top Positive Factors</h5>
+                        <table class="student-details-table">
+            `;
+            
+            positiveFactors.forEach(([factor, value]) => {
+                html += `
+                    <tr>
+                        <th>${factor.replace(/_/g, ' ')}</th>
+                        <td style="color: green;">+${value.toFixed(4)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </table>
+                        
+                        <h5 class="mt-4">Top Negative Factors</h5>
+                        <table class="student-details-table">
+            `;
+            
+            negativeFactors.forEach(([factor, value]) => {
+                html += `
+                    <tr>
+                        <th>${factor.replace(/_/g, ' ')}</th>
+                        <td style="color: red;">${value.toFixed(4)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            const studentDetailsContentElement = document.getElementById('studentDetailsContent');
+            if (studentDetailsContentElement) {
+                studentDetailsContentElement.innerHTML = html;
+            }
+
+            const studentDetailsModalLabelElement = document.getElementById('studentDetailsModalLabel');
+            if (studentDetailsModalLabelElement) {
+                studentDetailsModalLabelElement.textContent = `${faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'} Student Details`;
+            }
+            
+            const flagBtn = document.getElementById('flagStudentBtn');
+            if (flagBtn) {
+                if (isFlagged) {
+                    flagBtn.textContent = 'Unflag Student';
+                    flagBtn.classList.remove('btn-primary');
+                    flagBtn.classList.add('btn-warning');
+                } else {
+                    flagBtn.textContent = 'Flag for Review';
+                    flagBtn.classList.remove('btn-warning');
+                    flagBtn.classList.add('btn-primary');
+                }
+                
+                flagBtn.onclick = function() {
+                    toggleFlagStudent(student, faculty, isFlagged);
+                };
+            }
+            
+            $('#studentDetailsModal').modal('show');
+        }
+        
+        // Function to toggle student flag status
+        function toggleFlagStudent(student, faculty, isFlagged) {
+            if (isFlagged) {
+                const index = flaggedStudents.findIndex(s => s.student_id === student.student_id && s.faculty === faculty);
+                if (index !== -1) {
+                    flaggedStudents.splice(index, 1);
+                }
+                Swal.fire('Success', 'Student has been unflagged', 'success');
+            } else {
+                flaggedStudents.push({
+                    student_id: student.student_id,
+                    faculty: faculty,
+                    reason: 'Manually flagged for review',
+                    date: new Date().toISOString(),
+                    student_data: student.student_data,
+                    prediction: student.result,
+                    pass_probability: student.pass_probability,
+                    shap_values: student.shap_values
+                });
+                Swal.fire('Success', 'Student has been flagged for review', 'success');
+            }
+            
+            localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+            $('#studentDetailsModal').modal('hide');
+        }
+
+        // Function to show prediction history
+        function showPredictionHistory() {
+            let engineeringHtml = '';
+            predictionHistory.engineering.slice().reverse().forEach(entry => {
+                const date = new Date(entry.date);
+                engineeringHtml += `
+                    <tr>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                        <td>${entry.count}</td>
+                        <td>${entry.atRisk}</td>
+                        <td>${entry.predictedPass}</td>
+                        <td>${entry.interventions}</td>
+                    </tr>
+                `;
+            });
+            const engineeringHistoryTableElement = document.getElementById('engineeringHistoryTable');
+            if (engineeringHistoryTableElement) {
+                engineeringHistoryTableElement.innerHTML = engineeringHtml;
+            }
+            
+            let engineeringDetailedHtml = '';
+            detailedPredictions.engineering.slice().reverse().forEach(entry => {
+                const date = new Date(entry.date);
+                const shapFactorsList = entry.top_5_shap_factors.join('<br>');
+                engineeringDetailedHtml += `
+                    <tr>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                        <td>${entry.student_id}</td>
+                        <td class="${entry.result.toLowerCase()}">${entry.result}</td>
+                        <td>${(entry.pass_probability * 100).toFixed(2)}%</td>
+                        <td>${(entry.fail_probability * 100).toFixed(2)}%</td>
+                        <td>${(entry.confidence * 100).toFixed(2)}%</td>
+                        <td>${shapFactorsList}</td>
+                    </tr>
+                `;
+            });
+            const engineeringDetailedHistoryTableElement = document.getElementById('engineeringDetailedHistoryTable');
+            if (engineeringDetailedHistoryTableElement) {
+                engineeringDetailedHistoryTableElement.innerHTML = engineeringDetailedHtml;
+            }
+            
+            let appliedHtml = '';
+            predictionHistory.applied_sciences.slice().reverse().forEach(entry => {
+                const date = new Date(entry.date);
+                appliedHtml += `
+                    <tr>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                        <td>${entry.count}</td>
+                        <td>${entry.atRisk}</td>
+                        <td>${entry.predictedPass}</td>
+                        <td>${entry.interventions}</td>
+                    </tr>
+                `;
+            });
+            const appliedHistoryTableElement = document.getElementById('appliedHistoryTable');
+            if (appliedHistoryTableElement) {
+                appliedHistoryTableElement.innerHTML = appliedHtml;
+            }
+            
+            let appliedDetailedHtml = '';
+            detailedPredictions.applied_sciences.slice().reverse().forEach(entry => {
+                const date = new Date(entry.date);
+                const shapFactorsList = entry.top_5_shap_factors.join('<br>');
+                appliedDetailedHtml += `
+                    <tr>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                        <td>${entry.student_id}</td>
+                        <td class="${entry.result.toLowerCase()}">${entry.result}</td>
+                        <td>${(entry.pass_probability * 100).toFixed(2)}%</td>
+                        <td>${(entry.fail_probability * 100).toFixed(2)}%</td>
+                        <td>${(entry.confidence * 100).toFixed(2)}%</td>
+                        <td>${shapFactorsList}</td>
+                    </tr>
+                `;
+            });
+            const appliedDetailedHistoryTableElement = document.getElementById('appliedDetailedHistoryTable');
+            if (appliedDetailedHistoryTableElement) {
+                appliedDetailedHistoryTableElement.innerHTML = appliedDetailedHtml;
+            }
+            
+            $('#historyModal').modal('show');
+        }
+        
+        // Initialize the dashboard with error handling
+        async function initializeDashboard() {
+            console.log('Initializing dashboard');
+            
+            try {
+                const resultCards = document.querySelectorAll('.result-card');
+                resultCards.forEach(card => {
+                    card.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Initializing dashboard...</div>';
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                updateCumulativeStatistics();
+                await updateDashboard(true);
+                
+                setInterval(async () => {
+                    console.log('Scheduled dashboard update');
+                    await updateDashboard(true);
+                }, 15000);
+                
+                document.getElementById('sendEmailBtn').addEventListener('click', function() {
+                    const student = $('#emailModal').data('student');
+                    const subject = document.getElementById('emailSubject').value;
+                    const body = document.getElementById('emailBody').value;
+                    
+                    sendEmailToStudent(student, subject, body);
+                });
+
+                document.getElementById('previewAttachmentBtn').addEventListener('click', function() {
+                    const student = $('#emailModal').data('student');
+                    if (student) {
+                        previewStudentReport(student);
+                    } else {
+                        Swal.fire('Error', 'Student data not found for preview', 'error');
+                    }
+                });
+            } catch (error) {
+                console.error('Dashboard initialization failed:', error.message, error.stack);
+                const resultCards = document.querySelectorAll('.result-card');
+                resultCards.forEach(card => {
+                    card.innerHTML = '<div class="text-center py-4 text-danger">Failed to initialize dashboard. Check console for details.</div>';
+                });
+                Swal.fire({
+                    title: 'Initialization Error',
+                    text: 'Failed to initialize the dashboard. Please check the console and refresh the page.',
+                    icon: 'error',
+                    confirmButtonText: 'Refresh',
+                    allowOutsideClick: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        }
+        
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            applyCumulativeDesign(getPreferredCumulativeDesign());
+
+            const designSelect = document.getElementById('cumulativeDesignSelect');
+            if (designSelect) {
+                designSelect.value = getPreferredCumulativeDesign();
+                designSelect.addEventListener('change', function() {
+                    applyCumulativeDesign(this.value);
+                });
+            }
+
+            // Glass card click-to-select
+            document.querySelectorAll('.compact-stats-grid .compact-stat-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    if (document.body.getAttribute('data-cumulative-design') === CUMULATIVE_DESIGN_GLASS) {
+                        document.querySelectorAll('.compact-stats-grid .compact-stat-card')
+                            .forEach(c => c.classList.remove('selected'));
+                        this.classList.add('selected');
+                    }
+                });
+            });
+
+            const sampleSizeSelect = document.getElementById('sampleSizeSelect');
+            const applySampleSizeBtn = document.getElementById('applySampleSizeBtn');
+
+            if (sampleSizeSelect) {
+                sampleSizeSelect.value = currentSampleSizeSetting;
+                sampleSizeSelect.addEventListener('change', function() {
+                    if (this.value === 'auto') {
+                        currentSampleSizeSetting = 'auto';
+                        localStorage.setItem(SAMPLE_SIZE_STORAGE_KEY, 'auto');
+                        return;
+                    }
+
+                    const selected = parseInt(this.value, 10);
+                    if (!Number.isNaN(selected) && selected >= 1 && selected <= 100) {
+                        currentSampleSizeSetting = String(selected);
+                        localStorage.setItem(SAMPLE_SIZE_STORAGE_KEY, String(selected));
+                    }
+                });
+            }
+
+            if (applySampleSizeBtn) {
+                applySampleSizeBtn.addEventListener('click', async function() {
+                    await updateDashboard(true);
+                    const modeText = currentSampleSizeSetting === 'auto'
+                        ? 'Auto mode enabled (random 8-30 per faculty on each refresh).'
+                        : `Sample size set to ${currentSampleSizeSetting} per faculty.`;
+                    Swal.fire('Updated', modeText, 'success');
+                });
+            }
+
+            const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+            if (viewHistoryBtn) {
+                viewHistoryBtn.addEventListener('click', showPredictionHistory);
+            }
+
+            const viewFlaggedBtn = document.getElementById('viewFlaggedBtn');
+            if (viewFlaggedBtn) {
+                viewFlaggedBtn.addEventListener('click', function() {
+                    window.location.href = '/flagged-students';
+                });
+            }
+
+            const manageInterventionsBtn = document.getElementById('manageInterventionsBtn');
+            if (manageInterventionsBtn) {
+                manageInterventionsBtn.addEventListener('click', function() {
+                    Swal.fire('Interventions', 'This would open the interventions management interface in a real application.', 'info');
+                });
+            }
+            
+            // Reset cumulative statistics button
+            const resetStatsBtn = document.getElementById('resetStatsBtn');
+            if (resetStatsBtn) {
+                resetStatsBtn.addEventListener('click', function() {
+                    Swal.fire({
+                        title: 'Reset Statistics?',
+                        html: '<small style="color: #bbb;">This will clear all cumulative prediction totals and reset everything to zero.</small>',
+                        icon: 'warning',
+                        iconColor: '#ffc107',
+                        background: '#3a3a3a',
+                        color: '#e0e0e0',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#555',
+                        confirmButtonText: 'Yes, reset',
+                        cancelButtonText: 'Cancel',
+                        width: '320px',
+                        padding: '0.8rem',
+                        customClass: {
+                            container: 'reset-modal-container',
+                            popup: 'reset-modal-popup',
+                            title: 'reset-modal-title',
+                            icon: 'reset-modal-icon'
+                        },
+                        didOpen: (modal) => {
+                            modal.style.borderRadius = '8px';
+                            const titleEl = modal.querySelector('.swal2-title');
+                            if (titleEl) {
+                                titleEl.style.fontSize = '1rem';
+                                titleEl.style.marginBottom = '0.4rem';
+                                titleEl.style.color = '#fff';
+                            }
+                            const textEl = modal.querySelector('.swal2-html-container');
+                            if (textEl) {
+                                textEl.style.marginBottom = '0.6rem';
+                                textEl.style.marginTop = '0';
+                            }
+                            const iconEl = modal.querySelector('.swal2-icon');
+                            if (iconEl) {
+                                iconEl.style.margin = '0 auto 0.5rem auto';
+                                iconEl.style.width = '3em';
+                                iconEl.style.height = '3em';
+                            }
+                            const btnContainer = modal.querySelector('.swal2-actions');
+                            if (btnContainer) {
+                                btnContainer.style.gap = '0.4rem';
+                                btnContainer.style.marginTop = '0.4rem';
+                            }
+                            const btns = modal.querySelectorAll('button');
+                            btns.forEach(btn => {
+                                btn.style.fontSize = '0.8rem';
+                                btn.style.padding = '0.35rem 0.9rem';
+                                btn.style.borderRadius = '4px';
+                                btn.style.fontWeight = '500';
+                            });
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            localStorage.removeItem('cumulativeStats');
+                            localStorage.removeItem('flaggedStudents');
+                            Object.assign(cumulativeStats, {
+                                totalPredictionsMade: 0,
+                                totalPassing: 0,
+                                totalBorderline: 0,
+                                totalFailing: 0,
+                                totalEngineering: 0,
+                                totalApplied: 0,
+                                allStudents: [],
+                                lastUpdated: new Date().toISOString()
+                            });
+                            updateCumulativeStatistics(null);
+                            Swal.fire({
+                                title: 'Reset',
+                                html: '<small style="color: #bbb;">All statistics have been reset to zero.</small>',
+                                icon: 'success',
+                                iconColor: '#28a745',
+                                background: '#3a3a3a',
+                                color: '#e0e0e0',
+                                width: '260px',
+                                padding: '0.4rem 0.6rem',
+                                customClass: {
+                                    popup: 'reset-modal-popup'
+                                },
+                                didOpen: (modal) => {
+                                    modal.style.borderRadius = '8px';
+                                    const titleEl = modal.querySelector('.swal2-title');
+                                    if (titleEl) {
+                                        titleEl.style.fontSize = '1rem';
+                                        titleEl.style.color = '#fff';
+                                    }
+                                    const iconEl = modal.querySelector('.swal2-icon');
+                                    if (iconEl) {
+                                        iconEl.style.transform = 'scale(0.72)';
+                                        iconEl.style.transformOrigin = 'center';
+                                        iconEl.style.margin = '-0.3rem auto 0.2rem auto';
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Focus Mode for Faculty Sections
+            let expandedFaculty = null; // Track which faculty is expanded (null = grid mode)
+            const facultySectionsRow = document.querySelector('.faculty-sections-row');
+            const facultyColumns = document.querySelectorAll('.faculty-column');
+            const predictionHeadings = document.querySelectorAll('.prediction-heading');
+            
+            predictionHeadings.forEach(heading => {
+                heading.addEventListener('click', function() {
+                    // Find the parent faculty column
+                    const facultyColumn = heading.closest('.faculty-column');
+                    const facultyId = facultyColumn.id; // 'engineering-section' or 'applied-sciences-section'
+                    
+                    // If this faculty is already expanded, collapse back to grid
+                    if (expandedFaculty === facultyId) {
+                        expandedFaculty = null;
+                        facultySectionsRow.classList.remove('focus-mode');
+                        facultyColumns.forEach(col => {
+                            col.classList.remove('expanded', 'hidden');
+                        });
+                        predictionHeadings.forEach(h => h.classList.remove('in-focus-mode'));
+                    } else {
+                        // Switch to expanded mode for this faculty
+                        expandedFaculty = facultyId;
+                        facultySectionsRow.classList.add('focus-mode');
+                        facultyColumns.forEach(col => {
+                            if (col.id === facultyId) {
+                                col.classList.add('expanded');
+                                col.classList.remove('hidden');
+                                col.querySelector('.prediction-heading')?.classList.add('in-focus-mode');
+                            } else {
+                                col.classList.add('hidden');
+                                col.classList.remove('expanded');
+                                col.querySelector('.prediction-heading')?.classList.remove('in-focus-mode');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            initializeDashboard();
+        });
+    </script>
+</body>
+</html>

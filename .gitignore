@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv313/
+
+# Node
+node_modules/
+frontend/build/
+
+# CatBoost training artifacts
+catboost_info/
+
+# Large generated data/model files (exceed GitHub's 100MB limit)
+first_time_stud_latest.csv
+first_time_stud_latest.pkl
+
+# Editor
+.vscode/
+
+# Secrets
+backend/.env
+.env

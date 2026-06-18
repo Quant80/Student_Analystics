@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation Form</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background-image: url('static/img_3.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 20px;
+        }
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 40px);
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(3px); /* Soft blur effect */
+        }
+        .button-column {
+            width: 200px;
+            padding: 20px;
+            background-color: rgba(248, 249, 250, 0.3); /* Semi-transparent */
+            border-right: 1px solid rgba(222, 226, 230, 0.5);
+        }
+        .btn-vertical {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: left;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background-color: rgba(233, 236, 239, 0.8);
+            color: #495057;
+            border: 1px solid rgba(206, 212, 218, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-vertical:hover {
+            background-color: rgba(209, 215, 220, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            background-color: rgba(243, 236, 236, 0.2); /* More transparent */
+        }
+        .header-box {
+            background: rgba(248, 249, 250, 0.7);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid rgba(108, 117, 125, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 1px solid rgba(222, 226, 230, 0.5);
+        }
+        .header-box h1 {
+            font-size: 2.2rem;
+            color: #343a40;
+            margin-bottom: 15px;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(108, 117, 125, 0.5);
+        }
+        .subtitle-box {
+            display: inline-block;
+            background-color: rgba(248, 249, 250, 0.7);
+            padding: 1px 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 0px solid rgba(222, 226, 230, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border: 1px solid rgba(224, 224, 224, 0.5);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .form-control {
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            padding: 5px 15px;
+            transition: all 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23495057'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 1em;
+            padding-right: 35px;
+            width: 100%; /* Ensure full width */
+        }
+        .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .btn-submit {
+            background-color: #494a532c;
+            color: rgb(33, 29, 29);
+            font-weight: 500;
+            padding: 12px 25px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            border: none;
+            font-size: 1.1rem;
+        }
+        .btn-submit:hover {
+            background-color: #45484a17;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(232, 240, 243, 0.393);
+        }
+        .footer {
+            text-align: center;
+            padding: 1px;
+            color: #6c757d;
+            font-size: 0.9rem;
+            background-color: rgba(248, 249, 250, 0.7);
+            border-top: 1px solid rgba(222, 226, 230, 0.5);
+            margin-top: 20px;
+            border-radius: 0 0 10px 10px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .main-container {
+                flex-direction: column;
+                min-height: auto;
+            }
+            .button-column {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+                padding: 15px;
+            }
+            .btn-vertical {
+                display: inline-block;
+                width: auto;
+                margin-right: 10px;
+                margin-bottom: 8px;
+            }
+            .header-box h1 {
+                font-size: 1.8rem;
+            }
+            .content-area {
+                padding: 20px;
+            }
+            .col-md-6 {
+                width: 100%; /* Ensure full width on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Side Buttons -->
+        <div class="button-column">
+            <a href="/" class="btn-vertical">
+                <i class="fas fa-home"></i> Home
+               </a>
+                 <a href="/dashsite"  class="btn-vertical">
+                    <i class="fas fa-edit"></i> RealTime
+                     </a>
+                <a href="/engineering"  class="btn-vertical">
+                    <i class="fas fa-edit"></i> Engineering
+                </a>
+                <a href="/applied-sciences" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Appl Sciences
+                </a>
+                <a href="/modelsai" class="btn-vertical">
+                    <i class="fas fa-edit"></i> ModelsAi
+                </a>
+                <a href="/ai" class="btn-vertical">
+                    <i class="fas fa-edit"></i> DUTAi
+            </a>
+            <a href="/results" class="btn-vertical">
+                <i class="fas fa-chart-bar"></i> Results
+            </a>
+<script>
+    function openBlazorApp() {
+        window.open('http://localhost:5183', 'BlazorAppWindow');
+    }
+        </script>
+         <button class="btn-vertical" onclick="openBlazorApp()"><i class="fas fa-edit"></i> BlazorApp</button> 
+
+        </div>
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <!-- Header -->
+            <div class="header-box">
+                <h1><i class="fas fa-graduation-cap"></i> STUDENT RECOMMENDATION SYSTEM</h1>
+                <div class="subtitle-box">Fill in the details to get recommendations</div>
+            </div>
+            <!-- Form Container -->
+            <div class="form-container">
+                <form method="post" action="/results">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="age">Age:</label>
+                                <input type="number" step="10" class="form-control" id="age" name="age" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="gender">Gender:</label>
+                                <select class="form-control" id="gender" name="gender" required>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="previous_activity_desc">Previous Activity:</label>
+                                <select class="form-control" id="previous_activity_desc" name="previous_activity_desc" required>
+                                    <option value="GRADE 12">Grade 12</option>
+                                    <option value="UNEMPLOYED">Unemployed</option>
+                                    <option value="OTHER">Other</option>
+                                    <option value="WORKING">Working</option>
+                                    <option value="UNIVERSITY STUDENT">University Student</option>
+                                    <option value="UPGRADING NSC">Upgrading NSC</option>
+                                    <option value="UPGRADED NSC">Upgraded NSC</option>
+                                    <option value="TVET STUDENT">TVET Student</option>
+                                    <option value="TECHNIKON STUDENT">Technikon Student</option>
+                                    <option value="DEGREE STUDENT">Degree Student</option>
+                                    <option value="PRIVATE COLLEGE STUDENT">Private College Student</option>
+                                    <option value="TECHNICAL COLLEGE STUDENT">Technical College Student</option>
+                                    <option value="DIPLOMA STUDENT">Diploma Student</option>
+                                    <option value="DIPLOMA COMPLETED">Diploma Completed</option>
+                                    <option value="CERTIFICATE STUDENT">Certificate Student</option>
+                                    <option value="DEGREE COMPLETED">Degree Completed</option>
+                                    <option value="UPGRADING SENIOR CERTIFICATE">Upgrading Senior Certificate</option>
+                                    <option value="FOREIGN TERTIARY STUDENT">Foreign Tertiary Student</option>
+                                    <option value="COLLEGE OF NURSING STUDENT">College of Nursing Student</option>
+                                    <option value="NATIONAL SERVICE">National Service</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="language_name">Language:</label>
+                                <select class="form-control" id="language_name" name="language_name" required>
+                                    <option value="ZULU">Zulu</option>
+                                    <option value="XHOSA">Xhosa</option>
+                                    <option value="ENGLISH">English</option>
+                                    <option value="OTHER BLACK LANG">Other Black Language</option>
+                                    <option value="OTHER-AFRICAN">Other African Language</option>
+                                    <option value="SWATI">Swati</option>
+                                    <option value="TSWANA">Tswana</option>
+                                    <option value="SOUTH SOTHO">South Sotho</option>
+                                    <option value="TSONGA">Tsonga</option>
+                                    <option value="AFRIKAANS">Afrikaans</option>
+                                    <option value="NORTH SOTHO">North Sotho</option>
+                                    <option value="UNKNOWN">Unknown</option>
+                                    <option value="NDEBELE">Ndebele</option>
+                                    <option value="VENDA">Venda</option>
+                                    <option value="SOTHO(NORTH)">Sotho (North)</option>
+                                    <option value="SOTHO(SOUTH)">Sotho (South)</option>
+                                    <option value="SASWATI">Saswati</option>
+                                    <option value="ENGLISH/AFRIKAANS">English/Afrikaans</option>
+                                    <option value="NDONGA">Ndonga</option>
+                                    <option value="OTHER EUROPEAN LANG">Other European Language</option>
+                                    <option value="RUSSIAN">Russian</option>
+                                    <option value="DANISH">Danish</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ethnic_group_name">Ethnic Group:</label>
+                                <select class="form-control" id="ethnic_group_name" name="ethnic_group_name" required>
+                                    <option value="AFRICAN">African</option>
+                                    <option value="INDIAN">Indian</option>
+                                    <option value="WHITE">White</option>
+                                    <option value="COLOURED">Coloured</option>
+                                    <option value="NON SA">Non-SA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="church_religion_name">Religion:</label>
+                                <select class="form-control" id="church_religion_name" name="church_religion_name" required>
+                                    <option value="CHRISTIAN">Christian</option>
+                                    <option value="UNKNOWN">Unknown</option>
+                                    <option value="NAZARETH BAPTIST CHURCH">Nazareth Baptist Church</option>
+                                    <option value="ZION CHRISTIAN CHURCH">Zion Christian Church</option>
+                                    <option value="CATHOLIC">Catholic</option>
+                                    <option value="METHODIST">Methodist</option>
+                                    <option value="ANGLICAN">Anglican</option>
+                                    <option value="HINDU">Hindu</option>
+                                    <option value="MUSLIM">Muslim</option>
+                                    <option value="OTHER PROTESTANTS">Other Protestants</option>
+                                    <option value="PENTECOSTAL">Pentecostal</option>
+                                    <option value="PRESBYTERIAN">Presbyterian</option>
+                                    <option value="DUTCH REFORMED CHURCH">Dutch Reformed Church</option>
+                                    <option value="HERVORMD">Hervormd</option>
+                                    <option value="GEREFORMEERD">Gereformeer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="brics_country">BRICS Country:</label>
+                                <select class="form-control" id="brics_country" name="brics_country" required>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="race_equity">Race Equity:</label>
+                                <select class="form-control" id="race_equity" name="race_equity" required>
+                                    <option value="Black">Black</option>
+                                    <option value="White">White</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="disability_flag">Disability Flag:</label>
+                                <select class="form-control" id="disability_flag" name="disability_flag" required>
+                                    <option value="N">No</option>
+                                    <option value="Y">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="student_type_description">Student Type:</label>
+                                <select class="form-control" id="student_type_description" name="student_type_description" required>
+                                    <option value="NORMAL STUDENT">Normal Student</option>
+                                    <option value="SADC STUDENT">SADC Student</option>
+                                    <option value="INTERNATIONAL STUDENT">International Student</option>
+                                    <option value="ASYLUM SEEKER">Asylum Seeker</option>
+                                    <option value="REFUGEE">Refugee</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="residence_flag">Residence Flag:</label>
+                                <select class="form-control" id="residence_flag" name="residence_flag" required>
+                                    <option value="Y">Yes</option>
+                                    <option value="N">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="bursary_flag">Bursary Flag:</label>
+                                <select class="form-control" id="bursary_flag" name="bursary_flag" required>
+                                    <option value="N">No</option>
+                                    <option value="Y">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="previous_mark">Previous Mark:</label>
+                                <input type="number" step="10" class="form-control" id="previous_mark" name="previous_mark" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="stats_credit">Stats Credit:</label>
+                                <input type="number" step="0.01" class="form-control" id="stats_credit" name="stats_credit" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="completed_courses">Completed Courses:</label>
+                                <input type="text" class="form-control" id="completed_courses" name="completed_courses" placeholder="e.g., Course1,Course2,Course3" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-paper-plane"></i> Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        &copy; 2025 Student Recommendation System | Data Analytics Department
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

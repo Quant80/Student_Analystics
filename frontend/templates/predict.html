@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Prediction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .mynav {
+            border-radius: 10px;
+            box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .container {
+            margin-top: 50px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            transition: background-image 2s ease-in-out;
+        }
+
+        .prediction-header {
+            background: linear-gradient(135deg, #880085, #008000);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .btn-predicteng {
+            background-color: #119a61;
+            border-color: #3ccc90;
+            color: white;
+        }
+        .btn-predict {
+            background-color: #880085;
+            border-color: #880085;
+            color: white;
+        }
+
+        .btn-predict:hover {
+            background-color: #6a0067;
+            border-color: #6a0067;
+        }
+
+        .engineering-bg {
+            background-color: rgba(0, 128, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .applied-bg {
+            background-color: rgba(136, 0, 133, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        html, body {
+    margin: 0;
+    padding: 0;
+      }
+      .back-button {
+    margin: 0;
+    padding: 0;
+     }
+        .result-display {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .btn-back {
+            border:1px solid rgb(230, 220, 220);
+            color: rgb(104, 104, 108);
+            border-color: #0f6431;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage">
+        <!-- Back Button -->
+        <div class="back-button">
+            <a href="/" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    <div class="bg-image" id="bgImage">
+        <div class="mynav shadow-sm" style="background:transparent; color:rgb(255, 255, 255);text:bold; padding:10px;width:100%;">
+            <h1 class="text-center"><i class="fas fa-graduation-cap"></i> STUDENT PERFORMANCE PREDICTION</h1>
+        </div>
+
+        <div class="container mt-5">
+            <div class="prediction-header">
+                <h3><i class="fas fa-chart-line"></i> Student Performance Prediction</h3>
+                <p>Select a faculty to predict student performance</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="faculty-select"><strong>Select Faculty:</strong></label>
+                <select class="form-control" id="faculty-select">
+                    <option value="">-- Select Faculty --</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="applied-sciences">Applied Sciences</option>
+                    <option value="applied-sciences">Healthy Sciences</option>
+                    <option value="applied-sciences">Accounting & Informatics</option>
+                    <option value="applied-sciences">Management Sciences</option>
+                    <option value="applied-sciences">Arts & Design</option>
+                </select>
+            </div>
+
+            <!-- Engineering Form (hidden by default) -->
+            <div id="engineering-form" class="engineering-bg" style="display: none;">
+                <h4 class="text-center text-success mb-4"><i class="fas fa-cogs"></i> Engineering Faculty</h4>
+                <form id="engineering-prediction-form">
+                    <!-- Residence and FTEN Status -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="residence">Residence</label>
+                            <select class="form-control" id="residence" name="residence" required>
+                                <option value="">Select Residence</option>
+                                <option value="Y">Yes</option>
+                                <option value="N">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="ften_status">FTEN Status</label>
+                            <select class="form-control" id="ften_status" name="ften_status" required>
+                                <option value="">Select FTEN Status</option>
+                                <option value="N">N</option>
+                                <option value="F">F</option>
+                                <option value="T">T</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bursary and Offering Type -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="bursary">Bursary</label>
+                            <select class="form-control" id="bursary" name="bursary" required>
+                                <option value="">Select Bursary Status</option>
+                                <option value="N">No</option>
+                                <option value="Y">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="offering_type">Offering Type</label>
+                            <select class="form-control" id="offering_type" name="offering_type" required>
+                                <option value="">Select Offering Type</option>
+                                <option value="D1">D1</option>
+                                <option value="D3">D3</option>
+                                <option value="P1">P1</option>
+                                <option value="I1">I1</option>
+                                <option value="P3">P3</option>
+                                <option value="I3">I3</option>
+                                <option value="D2">D2</option>
+                                <option value="D6">D6</option>
+                                <option value="D8">D8</option>
+                                <option value="I7">I7</option>
+                                <option value="D7">D7</option>
+                                <option value="P7">P7</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Disability and Age Group -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="disability">Disability</label>
+                            <select class="form-control" id="disability" name="disability" required>
+                                <option value="">Select Disability Status</option>
+                                <option value="N">No</option>
+                                <option value="Y">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="age_group">Age Group</label>
+                            <select class="form-control" id="age_group" name="age_group" required>
+                                <option value="">Select Age Group</option>
+                                <option value="15-19">15-19</option>
+                                <option value="20-29">20-29</option>
+                                <option value="30-39">30-39</option>
+                                <option value="40-49">40-49</option>
+                                <option value=">50">>50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Exam Type and Exam Month -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="exam_type">Exam Type</label>
+                            <select class="form-control" id="exam_type" name="exam_type" required>
+                                <option value="">Select Exam Type</option>
+                                <option value="NORMAL EXAM">Normal Exam</option>
+                                <option value="RE-EXAM(SUPP-MIDYEAR/YEAR END)">Re-Exam (Supp Midyear/Year End)</option>
+                                <option value="SPECIAL EXAM">Special Exam</option>
+                                <option value="EXPERIENTIAL TRAINING">Experiential Training</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="exam_month">Exam Month</label>
+                            <input type="number" class="form-control" id="exam_month" name="exam_month" required>
+                        </div>
+                    </div>
+
+                    <!-- Race and Gender -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="race">Race</label>
+                            <select class="form-control" id="race" name="race" required>
+                                <option value="">Select Race</option>
+                                <option value="AFRICAN">African</option>
+                                <option value="INDIAN">Indian</option>
+                                <option value="WHITE">White</option>
+                                <option value="COLOURED">Coloured</option>
+                                <option value="NON SA">Non-SA</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="gender">Gender</label>
+                            <select class="form-control" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Student Type and Marital Status -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="stud_type">Student Type</label>
+                            <select class="form-control" id="stud_type" name="stud_type" required>
+                                <option value="">Select Student Type</option>
+                                <option value="NORMAL STUDENT">Normal Student</option>
+                                <option value="SADC STUDENT">SADC Student</option>
+                                <option value="INTERNATIONAL STUDENT">International Student</option>
+                                <option value="REFUGEE">Refugee</option>
+                                <option value="ASYLUM SEEKER">Asylum Seeker</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="marital_status">Marital Status</label>
+                            <select class="form-control" id="marital_status" name="marital_status" required>
+                                <option value="">Select Marital Status</option>
+                                <option value="M">Married</option>
+                                <option value="S">Single</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-predicteng btn-block">Predict Performance</button>
+                </form>
+
+                <div id="engineering-result" class="result-display mt-4" style="display: none;">
+                    <!-- Results will appear here -->
+                </div>
+            </div>
+
+            <!-- Applied Sciences Form (hidden by default) -->
+            <div id="applied-sciences-form" class="applied-bg" style="display: none;">
+                <h4 class="text-center text-purple mb-4"><i class="fas fa-flask"></i> Applied Sciences Faculty</h4>
+                <form id="applied-sciences-prediction-form">
+                    <!-- Department and Marital Status -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="department">Department</label>
+                            <select class="form-control" id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="MARITIME STUDIES">Maritime Studies</option>
+                                <option value="BIOTECHNOLOGY & FOOD SCIENCE">Biotechnology & Food Science</option>
+                                <option value="HORTICULTURE">Horticulture</option>
+                                <option value="CHEMISTRY">Chemistry</option>
+                                <option value="DEPT OF TEXTILE SC & APP TECH">Textile Science & App Tech</option>
+                                <option value="SPORT STUDIES">Sport Studies</option>
+                                <option value="FOOD & NUTRIT CONSUMER SCIENCE">Food & Nutrition Consumer Science</option>
+                                <option value="MATHEMATICS">Mathematics</option>
+                                <option value="FACULTY OFFICE-APPLIED SCIENCE">Faculty Office - Applied Science</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="marital_status">Marital Status</label>
+                            <select class="form-control" id="marital_status" name="marital_status" required>
+                                <option value="">Select Marital Status</option>
+                                <option value="MARRIED">Married</option>
+                                <option value="SINGLE">Single</option>
+                                <option value="SI">SI</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Gender and Race -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="gender">Gender</label>
+                            <select class="form-control" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="race">Race</label>
+                            <select class="form-control" id="race" name="race" required>
+                                <option value="">Select Race</option>
+                                <option value="AFRICAN">African</option>
+                                <option value="INDIAN">Indian</option>
+                                <option value="WHITE">White</option>
+                                <option value="COLOURED">Coloured</option>
+                                <option value="NON SA">Non-SA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Disability and Student Type -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="disability">Disability</label>
+                            <select class="form-control" id="disability" name="disability" required>
+                                <option value="">Select Disability Status</option>
+                                <option value="N">No</option>
+                                <option value="Y">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="stud_type">Student Type</label>
+                            <select class="form-control" id="stud_type" name="stud_type" required>
+                                <option value="">Select Student Type</option>
+                                <option value="NORMAL STUDENT">Normal Student</option>
+                                <option value="SADC STUDENT">SADC Student</option>
+                                <option value="INTERNATIONAL STUDENT">International Student</option>
+                                <option value="REFUGEE">Refugee</option>
+                                <option value="ASYLUM SEEKER">Asylum Seeker</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Exam Month and Exam Type -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="exam_month">Exam Month</label>
+                            <input type="number" class="form-control" id="exam_month" name="exam_month" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="exam_type">Exam Type</label>
+                            <select class="form-control" id="exam_type" name="exam_type" required>
+                                <option value="">Select Exam Type</option>
+                                <option value="NORMAL EXAM">Normal Exam</option>
+                                <option value="RE-EXAM(SUPP-MIDYEAR/YEAR END)">Re-Exam (Supp Midyear/Year End)</option>
+                                <option value="SPECIAL EXAM">Special Exam</option>
+                                <option value="EXPERIENTIAL TRAINING">Experiential Training</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Offer Type and FTEN Status -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="offer_type">Offer Type</label>
+                            <select class="form-control" id="offer_type" name="offer_type" required>
+                                <option value="">Select Offer Type</option>
+                                <option value="D1">D1</option>
+                                <option value="D3">D3</option>
+                                <option value="P1">P1</option>
+                                <option value="I1">I1</option>
+                                <option value="P3">P3</option>
+                                <option value="I3">I3</option>
+                                <option value="D2">D2</option>
+                                <option value="D6">D6</option>
+                                <option value="D8">D8</option>
+                                <option value="I7">I7</option>
+                                <option value="D7">D7</option>
+                                <option value="P7">P7</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="ften_status">FTEN Status</label>
+                            <select class="form-control" id="ften_status" name="ften_status" required>
+                                <option value="">Select FTEN Status</option>
+                                <option value="N">N</option>
+                                <option value="F">F</option>
+                                <option value="T">T</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Final Year and Residence -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="final_year">Final Year</label>
+                            <select class="form-control" id="final_year" name="final_year" required>
+                                <option value="">Select Final Year Status</option>
+                                <option value="Y">Yes</option>
+                                <option value="N">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="residence">Residence</label>
+                            <select class="form-control" id="residence" name="residence" required>
+                                <option value="">Select Residence Status</option>
+                                <option value="Y">Yes</option>
+                                <option value="N">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bursary and Age Group -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="bursary">Bursary</label>
+                            <select class="form-control" id="bursary" name="bursary" required>
+                                <option value="">Select Bursary Status</option>
+                                <option value="N">No</option>
+                                <option value="Y">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="age_group">Age Group</label>
+                            <select class="form-control" id="age_group" name="age_group" required>
+                                <option value="">Select Age Group</option>
+                                <option value="15-19">15-19</option>
+                                <option value="20-29">20-29</option>
+                                <option value="30-39">30-39</option>
+                                <option value="40-49">40-49</option>
+                                <option value=">50">>50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-predict btn-block">Predict Performance</button>
+                </form>
+
+                <div id="applied-sciences-result" class="result-display mt-4" style="display: none;">
+                    <!-- Results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Background image rotation
+        const images = ["static/img_3.png"]; 
+        let currentIndex = 0;
+
+        function changeBackground() {
+            document.getElementById('bgImage').style.backgroundImage = `url('${images[currentIndex]}')`;
+            currentIndex = (currentIndex + 1) % images.length;
+            setTimeout(changeBackground, 4000); 
+        }
+
+        changeBackground();
+
+        // Faculty selection
+        document.getElementById('faculty-select').addEventListener('change', function() {
+            const selectedFaculty = this.value;
+            
+            // Hide both forms first
+            document.getElementById('engineering-form').style.display = 'none';
+            document.getElementById('applied-sciences-form').style.display = 'none';
+            
+            // Show the selected form
+            if (selectedFaculty === 'engineering') {
+                document.getElementById('engineering-form').style.display = 'block';
+            } else if (selectedFaculty === 'applied-sciences') {
+                document.getElementById('applied-sciences-form').style.display = 'block';
+            }
+        });
+
+        // Engineering form submission
+        document.getElementById('engineering-prediction-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+            
+            fetch('/predictions/engineering', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('engineering-result');
+                resultDiv.style.display = 'block';
+                
+                // Format the prediction result
+                resultDiv.innerHTML = `
+                    <div class="alert ${data.prediction.result === 'Student Passed' ? 'alert-success' : 'alert-danger'}">
+                        <h5><i class="fas ${data.prediction.result === 'Student Passed' ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${data.prediction.result}</h5>
+                        <p><strong>Pass Probability:</strong> ${(data.prediction.pass_probability * 100).toFixed(2)}%</p>
+                        <p><strong>Fail Probability:</strong> ${(data.prediction.fail_probability * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while making the prediction.');
+            });
+        });
+
+        // Applied Sciences form submission
+        document.getElementById('applied-sciences-prediction-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+            
+            fetch('/predictions/applied-sciences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('applied-sciences-result');
+                resultDiv.style.display = 'block';
+                
+                // Format the prediction result
+                resultDiv.innerHTML = `
+                    <div class="alert ${data.prediction.result === 'Student Passed' ? 'alert-success' : 'alert-danger'}">
+                        <h5><i class="fas ${data.prediction.result === 'Student Passed' ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${data.prediction.result}</h5>
+                        <p><strong>Pass Probability:</strong> ${(data.prediction.pass_probability * 100).toFixed(2)}%</p>
+                        <p><strong>Fail Probability:</strong> ${(data.prediction.fail_probability * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while making the prediction.');
+            });
+        });
+    </script>
+</body>
+</html>

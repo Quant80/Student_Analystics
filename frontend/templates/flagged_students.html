@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flagged Students Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(3px);
+        }
+        
+        .button-column {
+            width: 200px;
+            padding: 20px;
+            background-color: rgba(248, 249, 250, 0.3);
+            border-right: 1px solid rgba(222, 226, 230, 0.5);
+        }
+        
+        .btn-vertical {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: left;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background-color: rgba(233, 236, 239, 0.8);
+            color: #495057;
+            border: 1px solid rgba(206, 212, 218, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .btn-vertical:hover {
+            background-color: rgba(209, 215, 220, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(243, 236, 236, 0.2);
+        }
+        
+        .header-box {
+            background: rgba(248, 249, 250, 0.442);
+            border-radius: 6px;
+            color: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid rgba(108, 117, 125, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 1px solid rgba(233, 237, 240, 0.5);
+        }
+        
+        .header-box h1 {
+            font-size: 2.2rem;
+            color: #343a40;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .header-box p {
+            color: #25282b;
+            font-size: 1rem;
+            margin-bottom: 0;
+            text-align: center;
+        }
+        
+        .section-title {
+            background-color: rgba(108, 117, 125, 0.7);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 25px 0 15px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .result-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-table {
+            width: 100%;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+             font-size: .9rem;
+        }
+        
+        .result-table th, .result-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-table th {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .result-table td.failing {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .result-table td.borderline {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .result-table td.intervention {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-size: 0.8rem;
+            background-color: rgba(248, 249, 250, 0.7);
+            border-top: 1px solid rgba(222, 226, 230, 0.5);
+            margin-top: auto;
+        }
+        
+        .student-details-modal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .student-details-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .student-details-table th, .student-details-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .student-details-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .email-btn {
+            margin-left: 5px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        #pdfPreview {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #dee2e6;
+            margin-top: 10px;
+        }
+        
+        .kpi-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            padding: 5px;
+            margin: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            min-width: 250px;
+            border-left: 4px solid;
+        }
+        
+        .kpi-card h3 {
+            font-size: 1.2rem;
+            color: #495057;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .kpi-card .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #343a40;
+            margin: 5px 0 0;
+        }
+        
+        .kpi-card .trend {
+            font-size: 0.7rem;
+            color: #28a745;
+        }
+        
+        .kpi-card.trend-down .trend {
+            color: #dc3545;
+        }
+        
+        .kpi-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: stretch;
+        }
+        
+        .kpi-card.canvas-card {
+            padding: 5px;
+            height: 100px;
+        }
+        
+        .kpi-card canvas {
+            max-height: 80px !important;
+            width: 100%;
+        }
+        
+        .table-actions {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .ai-report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .ai-report-table th, .ai-report-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .ai-report-table th {
+            background-color: #f2f2f2;
+        }
+        .analysis {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #007bff;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .button-column {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+                padding: 10px;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            
+            .btn-vertical {
+                display: inline-block;
+                width: auto;
+                margin-right: 10px;
+            }
+            
+            .header-box h1 {
+                font-size: 1.8rem;
+            }
+            
+            #pdfPreview {
+                height: 300px;
+            }
+            
+            .kpi-grid {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .kpi-card {
+                width: 100%;
+                min-width: 0;
+            }
+            
+            .kpi-card canvas {
+                max-height: 60px !important;
+            }
+            
+            .table-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    
+    <div class="content-wrapper">
+        <div class="main-container">
+            <div class="button-column">
+                <a href="/" class="btn-vertical">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" class="btn-vertical active" id="viewFlaggedBtn">
+                    <i class="fas fa-flag"></i> Flagged Students
+                </a>
+                <a href="/dashsite" class="btn-vertical">
+                    <i class="fas fa-edit"></i> RealTime
+                </a>
+                <a href="#" class="btn-vertical" id="viewHistoryBtn">
+                    <i class="fas fa-history"></i> View History
+                </a>
+                <a href="#" class="btn-vertical" id="manageInterventionsBtn">
+                    <i class="fas fa-tasks"></i> Interventions
+                </a>
+            </div>
+            
+            <div class="content-area">
+                <div class="header-box">
+                    <h3><i class="fas fa-flag"></i> DUT Flagged Students Dashboard</h3>
+                    <p>View and manage students flagged for review</p>
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-users"></i> Flagged Students Overview
+                </div>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card" style="border-left-color: #007bff;">
+                        <h3><i class="fas fa-users"></i> Total Students</h3>
+                        <div class="value" id="totalFlagged">0</div>
+                        <div class="trend">↑ 10% from last Prediction</div>
+                    </div>
+                    <div class="kpi-card trend-down" style="border-left-color: #ffc107;">
+                        <h3><i class="fas fa-exclamation-circle"></i> Borderline</h3>
+                        <div class="value" id="flaggedBorderline">0</div>
+                        <div class="trend">↓ 8% from last Prediction</div>
+                    </div>
+                    <div class="kpi-card trend-down" style="border-left-color: #dc3545;">
+                        <h3><i class="fas fa-times-circle"></i> Failing</h3>
+                        <div class="value" id="flaggedFailing">0</div>
+                        <div class="trend">↑ 2% from last Prediction</div>
+                    </div>
+                    <div class="kpi-card trend-down" style="border-left-color: #6c757d;">
+                        <canvas id="flaggedDonutChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="table-actions">
+                    <button class="btn btn-danger" id="clearAllFlagsBtn">
+                        <i class="fas fa-trash"></i> Clear All Flags
+                    </button>
+                    <button class="btn btn-success" id="exportExcelBtn">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-primary" id="downloadPDFBtn">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+                
+                <div id="flagged-students-table" class="result-card">
+                    <div id="tablePagination"></div>
+                    <table class="result-table">
+                        <tr>
+                            <th>No.</th>
+                            <th>Student ID</th>
+                            <th>Faculty</th>
+                            <th>Prediction</th>
+                            <th>Pass Probability</th>
+                            <th>Fail Probability</th>
+                            <th>Reason</th>
+                            <th>Date Flagged</th>
+                            <th>Actions</th>
+                        </tr>
+                        <tbody id="flaggedStudentsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            © 2025 Flagged Students Dashboard | Data Analytics Department
+        </footer>
+    </div>
+    
+    <!-- Student Details Modal -->
+    <div class="modal fade" id="studentDetailsModal" tabindex="-1" role="dialog" aria-labelledby="studentDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentDetailsModalLabel">Student Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body student-details-modal">
+                    <div id="studentDetailsContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" id="unflagStudentBtn">Unflag Student</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Email Modal -->
+    <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emailModalLabel">Send Email to Student</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="emailForm">
+                        <div class="form-group">
+                            <label for="emailTo">To:</label>
+                            <input type="email" class="form-control" id="emailTo" readonly>
+                            <small class="form-text text-muted">Emails will be forwarded to TrymoreN@dut.ac.za.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailSubject">Subject:</label>
+                            <input type="text" class="form-control" id="emailSubject" value="Academic Performance Notification">
+                        </div>
+                        <div class="form-group">
+                            <label for="emailBody">Message:</label>
+                            <textarea class="form-control" id="emailBody" rows="20">
+Dear Student,
+
+This email contains a detailed report of your academic performance prediction.
+
+Student Details
+Student ID: {student_id}
+Faculty: {faculty}
+Prediction: {prediction_status}
+
+Student Data
+{student_data}
+
+Prediction Details
+Pass Probability: {pass_probability}%
+Fail Probability: {fail_probability}%
+Reason for Flagging: {reason}
+Date Flagged: {date_flagged}
+Flagged: Yes
+
+Top Positive Factors
+{positive_factors}
+
+Top Negative Factors
+{negative_factors}
+
+Please find attached your detailed performance report.
+
+Best regards,
+Academic Support Team
+                            </textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Attachment:</label>
+                            <div class="form-control" id="attachmentInfo" style="height: auto;">
+                                Student performance report (auto-generated)
+                                <button type="button" class="btn btn-sm btn-info ml-2" id="previewAttachmentBtn">Preview Report</button>
+                            </div>
+                        </div>
+                        <div class="form-group" id="pdfPreviewContainer" style="display: none;">
+                            <label>Attachment Preview:</label>
+                            <iframe id="pdfPreview"></iframe>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="sendEmailBtn">Send Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Report Modal -->
+    <div class="modal fade" id="aiReportModal" tabindex="-1" role="dialog" aria-labelledby="aiReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aiReportModalLabel">AI Generated Report</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="aiReportContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="downloadAIReportBtn">Download Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations Modal -->
+    <div class="modal fade" id="recommendationsModal" tabindex="-1" role="dialog" aria-labelledby="recommendationsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recommendationsModalLabel">Student Recommendations</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+                    <div id="recommendationsContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const RECOMMENDATION_VERSION = 2;
+
+        // Load flagged students from localStorage with sample data
+        const flaggedStudents = JSON.parse(localStorage.getItem('flaggedStudents')) || [
+            {
+                student_id: "30499664",
+                faculty: "engineering",
+                prediction: "Failing",
+                pass_probability: 0.016055207546831873,
+                reason: "At risk of failing",
+                date: "2025-06-14T18:26:15",
+                student_data: {
+                    Gender: "M",
+                    LecturerTitle: "PROF",
+                    Language: "ZULU",
+                    Race: "AFRICAN",
+                    GapYears: 7,
+                    Department: "ELECTRICAL POWER ENGINEERING",
+                    OfferingType: "OTHER",
+                    FullPartTime: "F",
+                    Quintile: 1,
+                    PreviousActivity: "UNIVERSITY STUDENT",
+                    Religion: "CHRISTIAN",
+                    ExaminingAuthority: "KZ",
+                    StudentType: "F",
+                    ResidenceIndicator: "No",
+                    MaritalStatus: "M",
+                    MatricDescrip: "NSC DIP",
+                    StudentTypeDescription: "INTERNATIONAL STUDENT",
+                    FinalYearSymbol: 4,
+                    AgeGroup: "Teenager"
+                },
+                shap_values: {
+                    FullPartTime: -0.1491,
+                    MaritalStatus: -0.1143,
+                    StudentTypeDescription: -0.1805,
+                    PreviousActivity: 0.3200,
+                    Language: 0.2713,
+                    ResidenceIndicator: 0.0558,
+                    FinalYearSymbol: -0.4502
+                }
+            }
+            // Add more students as needed
+        ];
+        
+        // Chart instance for donut chart
+        let flaggedDonutChart = null;
+        
+        // Function to generate a mock email based on student ID
+        function generateMockEmail(studentId) {
+            return `${studentId}@dut.ac.za`;
+        }
+        
+        // Function to generate PDF report for a student
+        function generateStudentReport(student) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Student Performance Report', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}`, 105, 25, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.text('Student Information', 14, 35);
+            doc.setFontSize(12);
+            
+            let yPos = 45;
+            doc.text(`Student ID: ${student.student_id}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Faculty: ${student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Prediction: ${student.prediction}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Pass Probability: ${(student.pass_probability * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 10;
+            doc.text(`Fail Probability: ${((1 - student.pass_probability) * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 10;
+            doc.text(`Reason for Flagging: ${student.reason}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Date Flagged: ${new Date(student.date).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}`, 14, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(14);
+            doc.text('Key Performance Factors', 14, yPos);
+            doc.setFontSize(12);
+            yPos += 10;
+            
+            if (student.shap_values) {
+                const shapEntries = Object.entries(student.shap_values);
+                shapEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+                
+                shapEntries.slice(0, 12).forEach(([factor, value], index) => {
+                    if (yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(`${factor.replace(/_/g, ' ')}: ${value > 0 ? '+' : ''}${value.toFixed(4)}`, 20, yPos);
+                    yPos += 8;
+                });
+            } else {
+                doc.text('No SHAP values available', 20, yPos);
+                yPos += 8;
+            }
+            
+            doc.setFontSize(10);
+            doc.text('Confidential - For academic use only', 105, 285, { align: 'center' });
+            
+            return doc;
+        }
+        
+        // Function to generate PDF report for all students in table format
+        function generateAllStudentsPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Flagged Students Report', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}`, 105, 25, { align: 'center' });
+            
+            let yPos = 35;
+            doc.setFontSize(12);
+            doc.text('No.', 14, yPos);
+            doc.text('Student ID', 30, yPos);
+            doc.text('Faculty', 60, yPos);
+            doc.text('Prediction', 90, yPos);
+            doc.text('Pass Prob.', 120, yPos);
+            doc.text('Fail Prob.', 140, yPos);
+            doc.text('Reason', 160, yPos);
+            doc.text('Date Flagged', 190, yPos);
+            yPos += 10;
+            
+            flaggedStudents.forEach((student, index) => {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                    doc.setFontSize(12);
+                    doc.text('No.', 14, yPos);
+                    doc.text('Student ID', 30, yPos);
+                    doc.text('Faculty', 60, yPos);
+                    doc.text('Prediction', 90, yPos);
+                    doc.text('Pass Prob.', 120, yPos);
+                    doc.text('Fail Prob.', 140, yPos);
+                    doc.text('Reason', 160, yPos);
+                    doc.text('Date Flagged', 190, yPos);
+                    yPos += 10;
+                }
+                doc.text(`${index + 1}`, 14, yPos);
+                doc.text(student.student_id, 30, yPos);
+                doc.text(student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences', 60, yPos);
+                doc.text(student.prediction, 90, yPos);
+                doc.text(`${(student.pass_probability * 100).toFixed(2)}%`, 120, yPos);
+                doc.text(`${((1 - student.pass_probability) * 100).toFixed(2)}%`, 140, yPos);
+                doc.text(student.reason, 160, yPos, { maxWidth: 30 });
+                doc.text(new Date(student.date).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }), 190, yPos, { maxWidth: 40 });
+                yPos += 10;
+            });
+            
+            doc.setFontSize(10);
+            doc.text('Confidential - For academic use only', 105, 285, { align: 'center' });
+            return doc;
+        }
+        
+        // Function to preview the PDF report
+        function previewStudentReport(student) {
+            const pdfDoc = generateStudentReport(student);
+            const pdfDataUri = pdfDoc.output('datauristring');
+            const pdfPreview = document.getElementById('pdfPreview');
+            if (pdfPreview) {
+                pdfPreview.src = pdfDataUri;
+                document.getElementById('pdfPreviewContainer').style.display = 'block';
+            }
+        }
+        
+        // Function to send email via server-side API
+        async function sendEmailToStudent(student, subject, body) {
+            const pdfDoc = generateStudentReport(student);
+            const pdfData = pdfDoc.output('datauristring').split(',')[1]; // Get base64 data
+            
+            const payload = {
+                to: 'TrymoreN@dut.ac.za', // Override to specified email
+                subject: subject,
+                body: body,
+                attachment: {
+                    filename: `Student_${student.student_id}_Report.pdf`,
+                    content: pdfData,
+                    encoding: 'base64'
+                },
+                originalRecipient: generateMockEmail(student.student_id)
+            };
+            
+            try {
+                const response = await axios.post('/api/send-email', payload);
+                $('#emailModal').modal('hide');
+                Swal.fire({
+                    title: 'Email Sent',
+                    html: `Email successfully sent to <strong>TrymoreN@dut.ac.za</strong><br>
+                           (Originally intended for: ${generateMockEmail(student.student_id)})<br>
+                           A PDF report was attached.`,
+                    icon: 'success'
+                });
+            } catch (error) {
+                console.error('Error sending email:', error.message);
+                Swal.fire({
+                    title: 'Email Failed',
+                    text: 'Failed to send email. Please check the console for details.',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Function to update KPI cards and donut chart
+        function updateKPIs() {
+            const totalFlagged = flaggedStudents.length;
+            const flaggedBorderline = flaggedStudents.filter(s => s.prediction === 'Borderline').length;
+            const flaggedFailing = flaggedStudents.filter(s => s.prediction === 'Failing').length;
+            
+            const totalFlaggedElement = document.getElementById('totalFlagged');
+            if (totalFlaggedElement) totalFlaggedElement.textContent = totalFlagged || 0;
+            
+            const flaggedBorderlineElement = document.getElementById('flaggedBorderline');
+            if (flaggedBorderlineElement) flaggedBorderlineElement.textContent = flaggedBorderline || 0;
+            
+            const flaggedFailingElement = document.getElementById('flaggedFailing');
+            if (flaggedFailingElement) flaggedFailingElement.textContent = flaggedFailing || 0;
+            
+            // Update donut chart
+            const canvas = document.getElementById('flaggedDonutChart');
+            if (!canvas) return;
+            
+            const total = totalFlagged;
+            const data = total > 0 ? [flaggedBorderline, flaggedFailing] : [0, 0];
+            
+            if (flaggedDonutChart) {
+                flaggedDonutChart.data.datasets[0].data = data;
+                flaggedDonutChart.update();
+                return;
+            }
+            
+            flaggedDonutChart = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Borderline', 'Failing'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#ffc107', '#dc3545'],
+                        borderColor: ['#e0a800', '#c82333'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                color: '#495057'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Combined Predictions',
+                            color: '#495057',
+                            font: {
+                                size: 10
+                            },
+                            padding: {
+                                top: 5,
+                                bottom: 5
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed || 0;
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+        
+        // Function to clear all flagged students
+        function clearAllFlags() {
+            Swal.fire({
+                title: 'Are you sure?',
+                html: '<small style="color: #bbb;">This will remove all flagged students. This action cannot be undone.</small>',
+                icon: 'warning',
+                iconColor: '#ffc107',
+                background: '#3a3a3a',
+                color: '#e0e0e0',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#555',
+                confirmButtonText: 'Yes, clear all',
+                cancelButtonText: 'Cancel',
+                width: '300px',
+                padding: '0.4rem 0.6rem',
+                customClass: {
+                    popup: 'clear-flags-modal-popup',
+                    title: 'clear-flags-modal-title'
+                },
+                didOpen: (modal) => {
+                    modal.style.borderRadius = '8px';
+                    const titleEl = modal.querySelector('.swal2-title');
+                    if (titleEl) {
+                        titleEl.style.fontSize = '1rem';
+                        titleEl.style.marginBottom = '0.4rem';
+                        titleEl.style.color = '#fff';
+                    }
+                    const textEl = modal.querySelector('.swal2-html-container');
+                    if (textEl) {
+                        textEl.style.marginBottom = '0.6rem';
+                        textEl.style.marginTop = '0';
+                    }
+                    const iconEl = modal.querySelector('.swal2-icon');
+                    if (iconEl) {
+                        iconEl.style.margin = '0 auto 0.5rem auto';
+                        iconEl.style.width = '3em';
+                        iconEl.style.height = '3em';
+                    }
+                    const btnContainer = modal.querySelector('.swal2-actions');
+                    if (btnContainer) {
+                        btnContainer.style.gap = '0.4rem';
+                        btnContainer.style.marginTop = '0.4rem';
+                    }
+                    const btns = modal.querySelectorAll('button');
+                    btns.forEach(btn => {
+                        btn.style.fontSize = '0.8rem';
+                        btn.style.padding = '0.35rem 0.9rem';
+                        btn.style.borderRadius = '4px';
+                        btn.style.fontWeight = '500';
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    flaggedStudents.length = 0;
+                    localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                    updateFlaggedStudentsTable();
+                    updateKPIs();
+                    Swal.fire({
+                        title: 'Cleared',
+                        html: '<small style="color: #bbb;">All flagged students have been removed.</small>',
+                        icon: 'success',
+                        iconColor: '#28a745',
+                        background: '#3a3a3a',
+                        color: '#e0e0e0',
+                        width: '260px',
+                        padding: '0.4rem 0.6rem',
+                        customClass: { popup: 'clear-flags-modal-popup' },
+                        didOpen: (modal) => {
+                            modal.style.borderRadius = '8px';
+                            const titleEl = modal.querySelector('.swal2-title');
+                            if (titleEl) {
+                                titleEl.style.fontSize = '1rem';
+                                titleEl.style.color = '#fff';
+                            }
+                            const iconEl = modal.querySelector('.swal2-icon');
+                            if (iconEl) {
+                                iconEl.style.transform = 'scale(0.72)';
+                                iconEl.style.transformOrigin = 'center';
+                                iconEl.style.margin = '-0.3rem auto 0.2rem auto';
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Function to export table to Excel
+        function exportToExcel() {
+            const table = document.querySelector('#flagged-students-table table');
+            const rows = table.querySelectorAll('tr');
+            const data = [];
+            
+            // Get headers
+            const headers = Array.from(rows[0].querySelectorAll('th')).map(th => th.textContent);
+            data.push(headers);
+            
+            // Get rows
+            Array.from(rows).slice(1).forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent);
+                data.push(cells);
+            });
+            
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // Append worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Flagged Students');
+            
+            // Generate and download Excel file
+            XLSX.writeFile(wb, 'Flagged_Students.xlsx');
+        }
+        
+        // Function to download PDF
+        function downloadPDF() {
+            const pdfDoc = generateAllStudentsPDF();
+            pdfDoc.save('Flagged_Students_Report.pdf');
+        }
+        
+        // Function to generate AI report with individual insights
+        function generateAIReport(student) {
+            // Prepare student data for table
+            let tableHtml = `
+                <table class="ai-report-table">
+                    <tr>
+                        <th>Feature</th>
+                        <th>Value</th>
+                        <th>SHAP Value</th>
+                        <th>AI Description</th>
+                    </tr>
+            `;
+            Object.entries(student.student_data).forEach(([key, value]) => {
+                const shapValue = student.shap_values && student.shap_values[key] !== undefined ? student.shap_values[key].toFixed(4) : '-';
+                let description = '';
+                switch (key) {
+                    case 'Gender':
+                        description = `${value === 'M' ? 'Male' : 'Female'} student, which is neutral in performance prediction.`;
+                        break;
+                    case 'LecturerTitle':
+                        description = `${value === 'PROF' ? 'Professor' : 'Adjunct'} status may indicate ${value === 'PROF' ? 'consistent' : 'variable'} support availability.`;
+                        break;
+                    case 'Language':
+                        description = `${value} as primary language may suggest need for additional language support.`;
+                        break;
+                    case 'Race':
+                        description = `${value} race category provides no significant performance indicator.`;
+                        break;
+                    case 'GapYears':
+                        description = `${value} years gap may indicate challenges with current academic adjustment.`;
+                        break;
+                    case 'Department':
+                        description = `${value} has demanding coursework.`;
+                        break;
+                    case 'OfferingType':
+                        description = `${value === 'OTHER' ? 'Other' : 'Full-time in Pietermaritzburg'} offering type suggests ${value === 'OTHER' ? 'a less' : 'an'} intensive study load.`;
+                        break;
+                    case 'FullPartTime':
+                        description = `${value === 'F' ? 'Full-time' : 'Part-time'} status is a ${value === 'F' ? 'positive' : 'neutral'} factor for engagement.`;
+                        break;
+                    case 'Quintile':
+                        description = `Quintile ${value} indicates ${value <= 2 ? 'lower' : 'moderate'} socioeconomic background, potentially impacting resources.`;
+                        break;
+                    case 'PreviousActivity':
+                        description = `${value} background may suggest ${value.includes('UNIVERSITY') ? 'prior academic struggles' : 'neutral academic history'}.`;
+                        break;
+                    case 'Religion':
+                        description = `${value} religion has no significant academic impact.`;
+                        break;
+                    case 'ExaminingAuthority':
+                        description = `${value} authority is neutral.`;
+                        break;
+                    case 'StudentType':
+                        description = `New student status is neutral.`;
+                        break;
+                    case 'ResidenceIndicator':
+                        description = `${value === 'Yes' ? 'On-campus' : 'Off-campus'} living may ${value === 'Yes' ? 'reduce' : 'enhance'} focus due to ${value === 'Yes' ? 'social distractions' : 'a controlled environment'}.`;
+                        break;
+                    case 'MaritalStatus':
+                        description = `${value === 'M' ? 'Married' : 'Other'} status is a ${value === 'M' ? 'slight positive' : 'neutral'} factor due to potential ${value === 'M' ? 'stability' : 'lack of additional support'}.`;
+                        break;
+                    case 'MatricDescrip':
+                        description = `${value} may indicate varied preparation levels.`;
+                        break;
+                    case 'StudentTypeDescription':
+                        description = `${value} status ${value === 'INTERNATIONAL STUDENT' ? 'negatively impacts' : 'is neutral'} due to ${value === 'INTERNATIONAL STUDENT' ? 'adjustment challenges' : 'standard integration'}.`;
+                        break;
+                    case 'FinalYearSymbol':
+                        description = `Symbol ${value} suggests ${value <= 4 ? 'moderate to poor' : 'strong'} prior performance, ${value <= 4 ? 'highlighting' : 'reinforcing'} foundational ${value <= 4 ? 'gaps' : 'strengths'}.`;
+                        break;
+                    case 'AgeGroup':
+                        description = `${value} age group is typical but may indicate maturity concerns with gap years.`;
+                        break;
+                }
+                tableHtml += `
+                    <tr>
+                        <td>${key}</td>
+                        <td>${value}</td>
+                        <td>${shapValue}</td>
+                        <td>${description}</td>
+                    </tr>
+                `;
+            });
+            tableHtml += `</table>`;
+
+            // Prepare top positive and negative factors
+            let positiveFactors = [];
+            let negativeFactors = [];
+            if (student.shap_values) {
+                const shapEntries = Object.entries(student.shap_values);
+                positiveFactors = shapEntries
+                    .filter(([_, value]) => value < 0) // Positive impact (negative SHAP value)
+                    .sort((a, b) => a[1] - b[1])
+                    .slice(0, 5)
+                    .map(([factor, value]) => ({ factor, value }));
+                negativeFactors = shapEntries
+                    .filter(([_, value]) => value > 0) // Negative impact (positive SHAP value)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([factor, value]) => ({ factor, value }));
+            }
+
+            // Generate analysis based on probabilities and SHAP values
+            const passProb = (student.pass_probability * 100).toFixed(2);
+            const failProb = ((1 - student.pass_probability) * 100).toFixed(2);
+            let analysisHtml = `
+                <div class="analysis">
+                    <h3>Analysis of Probabilities</h3>
+                    <p>The student exhibits a Pass Probability of ${passProb}%, indicating a ${passProb < 10 ? 'very low' : passProb < 50 ? 'low' : 'moderate'} likelihood of success based on current data and trends. Conversely, the Fail Probability stands at ${failProb}%, highlighting a ${failProb > 90 ? 'significant' : failProb > 50 ? 'moderate' : 'low'} risk of academic failure. This contrast is driven by key factors including a substantial ${negativeFactors.length > 0 ? `negative impact from ${negativeFactors[0].factor.replace(/_/g, ' ')} (${negativeFactors[0].value.toFixed(4)})` : 'lack of strong positive indicators'}, suggesting ${student.student_data.FinalYearSymbol <= 4 ? 'weak foundational skills' : 'solid prior performance'}, and ${student.student_data.StudentTypeDescription === 'INTERNATIONAL STUDENT' ? 'adjustment challenges as an international student' : 'standard academic integration'}. The positive influence of ${positiveFactors.length > 0 ? `${positiveFactors[0].factor.replace(/_/g, ' ')} (${positiveFactors[0].value.toFixed(4)})` : 'minimal factors'} offers some stability, but it is insufficient to offset the dominant negative contributors.</p>
+                    
+                    <h3>Top Positive and Negative Factors with Insights</h3>
+                    <ul>
+            `;
+            positiveFactors.forEach(({ factor, value }) => {
+                analysisHtml += `<li><strong>${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}</strong> - ${factor === 'FullPartTime' ? 'Full-time engagement' : factor === 'MaritalStatus' ? 'Married status' : 'Unknown factor'} is beneficial, providing a ${factor === 'FullPartTime' ? 'structured academic routine' : 'potential emotional support'}.</li>`;
+            });
+            negativeFactors.forEach(({ factor, value }) => {
+                analysisHtml += `<li><strong>${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}</strong> - ${factor === 'StudentTypeDescription' ? 'International student status' : factor === 'PreviousActivity' ? 'Prior university activity' : factor === 'Language' ? 'Zulu language' : factor === 'ResidenceIndicator' ? 'On-campus living' : 'Low final year symbol'} indicates ${factor === 'StudentTypeDescription' ? 'adjustment difficulties' : factor === 'PreviousActivity' ? 'past academic struggles' : factor === 'Language' ? 'a language barrier' : factor === 'ResidenceIndicator' ? 'social distractions' : 'weak foundational skills'}, necessitating targeted support.</li>`;
+            });
+            analysisHtml += `</ul>`;
+
+            // Generate personalized recommendations
+            analysisHtml += `
+                    <h3>Personalized Recommendations</h3>
+                    <ul>
+            `;
+            if (student.student_data.Language !== 'ENGLISH') {
+                analysisHtml += `<li><strong>Language Support:</strong> Enroll in targeted language programs to overcome barriers posed by ${student.student_data.Language} as a primary language, enhancing comprehension in technical subjects.</li>`;
+            }
+            analysisHtml += `<li><strong>Academic Advising:</strong> Schedule bi-weekly meetings with an advisor to monitor progress and address ${student.student_data.StudentTypeDescription === 'INTERNATIONAL STUDENT' ? 'adjustment challenges' : 'academic needs'}.</li>`;
+            if (student.student_data.GapYears > 5) {
+                analysisHtml += `<li><strong>Course Load Adjustment:</strong> Consider reducing the course load or exploring part-time options given the ${student.student_data.GapYears}-year gap, allowing better academic reintegration.</li>`;
+            }
+            if (student.student_data.ResidenceIndicator === 'Yes') {
+                analysisHtml += `<li><strong>Study Environment:</strong> Leverage on-campus living by establishing a dedicated study space to maintain focus and productivity.</li>`;
+            } else {
+                analysisHtml += `<li><strong>Study Environment:</strong> Maintain off-campus living focus by creating a structured study routine.</li>`;
+            }
+            if (student.student_data.FinalYearSymbol <= 4) {
+                analysisHtml += `<li><strong>Subject Tutoring:</strong> Seek specialized tutoring in ${student.student_data.Department} to strengthen weak foundational skills indicated by the Final Year Symbol ${student.student_data.FinalYearSymbol}.</li>`;
+            }
+            analysisHtml += `</ul></div>`;
+
+            return tableHtml + analysisHtml;
+        }
+        
+        // Function to show AI report in modal
+        function showAIReport(studentId, faculty) {
+            const student = flaggedStudents.find(s => s.student_id === studentId && s.faculty === faculty);
+            if (!student) {
+                Swal.fire('Error', 'Student not found', 'error');
+                return;
+            }
+            
+            const reportContent = generateAIReport(student);
+            document.getElementById('aiReportContent').innerHTML = reportContent;
+            $('#aiReportModal').data('student', student);
+            $('#aiReportModal').modal('show');
+        }
+        
+        // Function to download AI report as PDF
+        function downloadAIReport(student) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('AI Generated Performance Report', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}`, 105, 25, { align: 'center' });
+            
+            let yPos = 35;
+            doc.setFontSize(14);
+            doc.text('Student Information', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            doc.text(`Student ID: ${student.student_id}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Faculty: ${student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Prediction: ${student.prediction}`, 14, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(14);
+            doc.text('Student Data Insights', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            Object.entries(student.student_data).forEach(([key, value]) => {
+                let description = '';
+                switch (key) {
+                    case 'Gender': description = `${value === 'M' ? 'Male' : 'Female'} student, neutral performance indicator.`; break;
+                    case 'LecturerTitle': description = `${value === 'PROF' ? 'Professor' : 'Adjunct'} may indicate ${value === 'PROF' ? 'consistent' : 'variable'} support.`; break;
+                    case 'Language': description = `${value} may suggest need for language support.`; break;
+                    case 'Race': description = `${value} provides no significant performance indicator.`; break;
+                    case 'GapYears': description = `${value} years gap may affect academic adjustment.`; break;
+                    case 'Department': description = `${value} has demanding coursework.`; break;
+                    case 'OfferingType': description = `${value === 'OTHER' ? 'Other' : 'Full-time'} suggests ${value === 'OTHER' ? 'less' : 'intensive'} study load.`; break;
+                    case 'FullPartTime': description = `${value === 'F' ? 'Full-time' : 'Part-time'} is a ${value === 'F' ? 'positive' : 'neutral'} engagement factor.`; break;
+                    case 'Quintile': description = `Quintile ${value} indicates ${value <= 2 ? 'lower' : 'moderate'} socioeconomic status.`; break;
+                    case 'PreviousActivity': description = `${value} may suggest ${value.includes('UNIVERSITY') ? 'past struggles' : 'neutral history'}.`; break;
+                    case 'Religion': description = `${value} has no academic impact.`; break;
+                    case 'ExaminingAuthority': description = `${value} is neutral.`; break;
+                    case 'StudentType': description = `New student status is neutral.`; break;
+                    case 'ResidenceIndicator': description = `${value === 'Yes' ? 'On-campus' : 'Off-campus'} may ${value === 'Yes' ? 'reduce' : 'enhance'} focus.`; break;
+                    case 'MaritalStatus': description = `${value === 'M' ? 'Married' : 'Other'} is a ${value === 'M' ? 'slight positive' : 'neutral'} factor.`; break;
+                    case 'MatricDescrip': description = `${value} indicates varied preparation.`; break;
+                    case 'StudentTypeDescription': description = `${value} ${value === 'INTERNATIONAL STUDENT' ? 'negatively impacts' : 'is neutral'} due to ${value === 'INTERNATIONAL STUDENT' ? 'adjustment' : 'standard'} challenges.`; break;
+                    case 'FinalYearSymbol': description = `Symbol ${value} suggests ${value <= 4 ? 'moderate to poor' : 'strong'} prior performance.`; break;
+                    case 'AgeGroup': description = `${value} may indicate maturity concerns with gap years.`; break;
+                }
+                if (yPos > 270) { doc.addPage(); yPos = 20; }
+                doc.text(`${key.replace(/_/g, ' ')}: ${description}`, 14, yPos);
+                yPos += 10;
+            });
+            yPos += 15;
+
+            doc.setFontSize(14);
+            doc.text('Prediction Details', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            doc.text(`Pass Probability: ${(student.pass_probability * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 10;
+            doc.text(`Fail Probability: ${((1 - student.pass_probability) * 100).toFixed(2)}%`, 14, yPos);
+            yPos += 10;
+            doc.text(`Reason for Flagging: ${student.reason}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Date Flagged: ${new Date(student.date).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}`, 14, yPos);
+            yPos += 10;
+            doc.text(`Email: ${generateMockEmail(student.student_id)}`, 14, yPos);
+            yPos += 15;
+
+            doc.setFontSize(14);
+            doc.text('Top Positive Factors', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            let positiveFactors = [];
+            let negativeFactors = [];
+            if (student.shap_values) {
+                const shapEntries = Object.entries(student.shap_values);
+                positiveFactors = shapEntries
+                    .filter(([_, value]) => value < 0)
+                    .sort((a, b) => a[1] - b[1])
+                    .slice(0, 5);
+                negativeFactors = shapEntries
+                    .filter(([_, value]) => value > 0)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+            }
+            positiveFactors.forEach(([factor, value]) => {
+                if (yPos > 270) { doc.addPage(); yPos = 20; }
+                doc.text(`${factor.replace(/_/g, ' ')}: ${value.toFixed(4)} - ${factor === 'FullPartTime' ? 'Full-time engagement' : 'Married status'} is beneficial.`, 14, yPos);
+                yPos += 10;
+            });
+            yPos += 5;
+
+            doc.setFontSize(14);
+            doc.text('Top Negative Factors', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            negativeFactors.forEach(([factor, value]) => {
+                if (yPos > 270) { doc.addPage(); yPos = 20; }
+                doc.text(`${factor.replace(/_/g, ' ')}: ${value.toFixed(4)} - ${factor === 'StudentTypeDescription' ? 'International status' : factor === 'PreviousActivity' ? 'Prior activity' : factor === 'Language' ? 'Language barrier' : 'Residence'} indicates challenges.`, 14, yPos);
+                yPos += 10;
+            });
+            yPos += 5;
+
+            doc.setFontSize(14);
+            doc.text('Recommendations', 14, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            if (student.student_data.Language !== 'ENGLISH') {
+                doc.text('- Enroll in language support programs for ' + student.student_data.Language + '.', 14, yPos);
+                yPos += 10;
+            }
+            doc.text('- Schedule bi-weekly meetings with an advisor for progress monitoring.', 14, yPos);
+            yPos += 10;
+            if (student.student_data.GapYears > 5) {
+                doc.text('- Consider reducing course load due to ' + student.student_data.GapYears + ' years gap.', 14, yPos);
+                yPos += 10;
+            }
+            doc.text('- ' + (student.student_data.ResidenceIndicator === 'Yes' ? 'Establish a study space on-campus' : 'Maintain a structured off-campus routine') + ' to enhance focus.', 14, yPos);
+            yPos += 10;
+            if (student.student_data.FinalYearSymbol <= 4) {
+                doc.text('- Seek tutoring in ' + student.student_data.Department + ' for foundational skills.', 14, yPos);
+                yPos += 10;
+            }
+
+            doc.setFontSize(10);
+            doc.text('Confidential - For academic use only', 105, 285, { align: 'center' });
+            doc.save(`AI_Report_${student.student_id}.pdf`);
+        }
+        
+        // Pagination state
+        let currentPage = 1;
+        const PAGE_SIZE = 50;
+
+        // Function to update flagged students table
+        function updateFlaggedStudentsTable() {
+            const tableBody = document.getElementById('flaggedStudentsTableBody');
+            if (!tableBody) {
+                console.error("[TABLE] Element with ID 'flaggedStudentsTableBody' not found.");
+                return;
+            }
+            
+            // Sort flagged students by date in descending order (newest first)
+            const sortedStudents = flaggedStudents.slice().sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            const totalPages = Math.ceil(sortedStudents.length / PAGE_SIZE);
+            if (currentPage > totalPages) currentPage = 1;
+            const pageStudents = sortedStudents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+            const pageOffset = (currentPage - 1) * PAGE_SIZE;
+
+            console.log(`[TABLE] Rendering page ${currentPage}/${totalPages} (${pageStudents.length} rows)`);
+            
+            let html = '';
+            if (sortedStudents.length === 0) {
+                html = '<tr><td colspan="9" class="text-center">No students flagged for review</td></tr>';
+            } else {
+                pageStudents.forEach((student, index) => {
+                    const rowNum = pageOffset + index + 1;
+                    const date = new Date(student.date);
+                    html += `<tr>
+                            <td>${rowNum}</td>
+                            <td>${student.student_id}</td>
+                            <td>${student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'}</td>
+                            <td class="${student.prediction.toLowerCase()}">${student.prediction}</td>
+                            <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                            <td>${((1 - student.pass_probability) * 100).toFixed(2)}%</td>
+                            <td>${student.reason}</td>
+                            <td>${date.toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-info view-details" data-id="${student.student_id}" data-faculty="${student.faculty}">Details</button>
+                                <button class="btn btn-sm btn-success view-recommendations" data-id="${student.student_id}" data-faculty="${student.faculty}"><i class="fas fa-lightbulb"></i> ${student.recommendations ? 'Recs ✓' : 'Recs...'}</button>
+                                <button class="btn btn-sm btn-warning ai-report" data-id="${student.student_id}" data-faculty="${student.faculty}">AI Report</button>
+                                <button class="btn btn-sm btn-primary email-student" data-id="${student.student_id}" data-faculty="${student.faculty}" data-email="${generateMockEmail(student.student_id)}"><i class="fas fa-envelope"></i></button>
+                            </td>
+                        </tr>`;
+                });
+            }
+            
+            tableBody.innerHTML = html;
+
+            // Render pagination controls
+            let pagerHtml = '';
+            if (totalPages > 1) {
+                pagerHtml += `<div class="d-flex align-items-center justify-content-between mt-2">`;
+                pagerHtml += `<span class="text-muted small">Showing ${pageOffset + 1}–${Math.min(pageOffset + PAGE_SIZE, sortedStudents.length)} of ${sortedStudents.length} students</span>`;
+                pagerHtml += `<div>`;
+                if (currentPage > 1) pagerHtml += `<button class="btn btn-sm btn-outline-secondary mr-1" onclick="changePage(${currentPage - 1})">← Prev</button>`;
+                pagerHtml += `<span class="mx-2">Page ${currentPage} / ${totalPages}</span>`;
+                if (currentPage < totalPages) pagerHtml += `<button class="btn btn-sm btn-outline-secondary ml-1" onclick="changePage(${currentPage + 1})">Next →</button>`;
+                pagerHtml += `</div></div>`;
+            }
+            const pagerEl = document.getElementById('tablePagination');
+            if (pagerEl) pagerEl.innerHTML = pagerHtml;
+            
+            // Update KPIs and donut chart
+            updateKPIs();
+            
+            // Attach event listeners to details buttons
+            const detailButtons = document.querySelectorAll('#flaggedStudentsTableBody .view-details');
+            if (detailButtons.length === 0 && sortedStudents.length > 0) {
+                console.warn("No 'view-details' buttons found in flagged students table.");
+            }
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    showStudentDetails(studentId, faculty);
+                });
+            });
+            
+            // Attach event listeners to recommendations buttons
+            const recButtons = document.querySelectorAll('#flaggedStudentsTableBody .view-recommendations');
+            recButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    showRecommendations(studentId, faculty);
+                });
+            });
+
+            // Attach event listeners to AI report buttons
+            const aiReportButtons = document.querySelectorAll('#flaggedStudentsTableBody .ai-report');
+            if (aiReportButtons.length === 0 && sortedStudents.length > 0) {
+                console.warn("No 'ai-report' buttons found in flagged students table.");
+            }
+            aiReportButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    showAIReport(studentId, faculty);
+                });
+            });
+            
+            // Attach event listeners to email buttons
+            const emailButtons = document.querySelectorAll('#flaggedStudentsTableBody .email-student');
+            if (emailButtons.length === 0 && sortedStudents.length > 0) {
+                console.warn("No 'email-student' buttons found in flagged students table.");
+            }
+            emailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const faculty = this.getAttribute('data-faculty');
+                    const email = this.getAttribute('data-email');
+                    
+                    const student = flaggedStudents.find(s => s.student_id === studentId && s.faculty === faculty);
+                    if (!student) {
+                        Swal.fire('Error', 'Student not found', 'error');
+                        return;
+                    }
+                    
+                    document.getElementById('emailTo').value = email;
+                    
+                    // Prepare email content
+                    const positiveFactors = student.shap_values
+                        ? Object.entries(student.shap_values)
+                            .filter(([_, value]) => value < 0) // Positive impact
+                            .sort((a, b) => a[1] - b[1])
+                            .slice(0, 5)
+                            .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}`)
+                            .join('\n')
+                        : 'No positive factors available';
+                    
+                    const negativeFactors = student.shap_values
+                        ? Object.entries(student.shap_values)
+                            .filter(([_, value]) => value > 0) // Negative impact
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 5)
+                            .map(([factor, value]) => `${factor.replace(/_/g, ' ')}: ${value.toFixed(4)}`)
+                            .join('\n')
+                        : 'No negative factors available';
+                    
+                    let studentDataHtml = '';
+                    Object.entries(student.student_data).forEach(([key, value]) => {
+                        studentDataHtml += `${key.replace(/_/g, ' ')}\t${value}\n`;
+                    });
+                    
+                    let emailBody = document.getElementById('emailBody').value;
+                    emailBody = emailBody
+                        .replace('{student_id}', student.student_id)
+                        .replace('{faculty}', student.faculty === 'engineering' ? 'Engineering' : 'Applied Sciences')
+                        .replace('{prediction_status}', student.prediction)
+                        .replace('{pass_probability}', (student.pass_probability * 100).toFixed(2))
+                        .replace('{fail_probability}', ((1 - student.pass_probability) * 100).toFixed(2))
+                        .replace('{reason}', student.reason)
+                        .replace('{date_flagged}', new Date(student.date).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }))
+                        .replace('{student_data}', studentDataHtml)
+                        .replace('{positive_factors}', positiveFactors)
+                        .replace('{negative_factors}', negativeFactors);
+                    
+                    document.getElementById('emailBody').value = emailBody;
+                    
+                    $('#emailModal').data('student', student);
+                    $('#emailModal').modal('show');
+                });
+            });
+        }
+        
+        // Function to show student details in modal
+        function showStudentDetails(studentId, faculty) {
+            const student = flaggedStudents.find(s => s.student_id === studentId && s.faculty === faculty);
+            if (!student) {
+                Swal.fire('Error', 'Student not found', 'error');
+                return;
+            }
+            
+            // Prepare SHAP values for display (top 5 positive and negative)
+            let positiveFactors = [];
+            let negativeFactors = [];
+            if (student.shap_values) {
+                const shapEntries = Object.entries(student.shap_values);
+                positiveFactors = shapEntries
+                    .filter(([_, value]) => value < 0)
+                    .sort((a, b) => a[1] - b[1])
+                    .slice(0, 5);
+                negativeFactors = shapEntries
+                    .filter(([_, value]) => value > 0)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+            }
+            
+            let html = `
+                <h4>Student ID: ${student.student_id}</h4>
+                <p class="mb-4"><strong>Prediction:</strong> <span class="badge badge-${
+                    student.prediction === 'Passing' ? 'success' : 
+                    student.prediction === 'Failing' ? 'danger' : 'warning'
+                }">${student.prediction}</span></p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Student Data</h5>
+                        <table class="student-details-table">
+            `;
+            
+            Object.keys(student.student_data).forEach(key => {
+                html += `
+                    <tr>
+                        <th>${key.replace(/_/g, ' ')}</th>
+                        <td>${student.student_data[key]}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Prediction Details</h5>
+                        <table class="student-details-table">
+                            <tr>
+                                <th>Pass Probability</th>
+                                <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Fail Probability</th>
+                                <td>${((1 - student.pass_probability) * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Reason for Flagging</th>
+                                <td>${student.reason}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Flagged</th>
+                                <td>${new Date(student.date).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td><a href="mailto:${generateMockEmail(student.student_id)}">${generateMockEmail(student.student_id)}</a></td>
+                            </tr>
+                        </table>
+            `;
+            
+            if (positiveFactors.length > 0) {
+                html += `
+                    <h5 class="mt-4">Top Positive Factors</h5>
+                    <table class="student-details-table">
+                `;
+                positiveFactors.forEach(([factor, value]) => {
+                    html += `
+                        <tr>
+                            <th>${factor.replace(/_/g, ' ')}</th>
+                            <td style="color: green;">${value.toFixed(4)}</td>
+                        </tr>
+                    `;
+                });
+                html += `</table>`;
+            } else {
+                html += `<p class="mt-4 text-muted">No positive SHAP factors available.</p>`;
+            }
+            
+            if (negativeFactors.length > 0) {
+                html += `
+                    <h5 class="mt-4">Top Negative Factors</h5>
+                    <table class="student-details-table">
+                `;
+                negativeFactors.forEach(([factor, value]) => {
+                    html += `
+                        <tr>
+                            <th>${factor.replace(/_/g, ' ')}</th>
+                            <td style="color: red;">${value.toFixed(4)}</td>
+                        </tr>
+                    `;
+                });
+                html += `</table>`;
+            } else {
+                html += `<p class="mt-4 text-muted">No negative SHAP factors available.</p>`;
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            const studentDetailsContentElement = document.getElementById('studentDetailsContent');
+            if (studentDetailsContentElement) {
+                studentDetailsContentElement.innerHTML = html;
+            } else {
+                console.error("Element with ID 'studentDetailsContent' not found.");
+            }
+            
+            const studentDetailsModalLabelElement = document.getElementById('studentDetailsModalLabel');
+            if (studentDetailsModalLabelElement) {
+                studentDetailsModalLabelElement.textContent = `${faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'} Student Details`;
+            } else {
+                console.error("Element with ID 'studentDetailsModalLabel' not found.");
+            }
+            
+            const unflagBtn = document.getElementById('unflagStudentBtn');
+            if (unflagBtn) {
+                unflagBtn.onclick = function() {
+                    unflagStudent(student.student_id, faculty);
+                };
+            } else {
+                console.error("Element with ID 'unflagStudentBtn' not found.");
+            }
+            
+            $('#studentDetailsModal').modal('show');
+        }
+        
+        // Function to unflag a student
+        function unflagStudent(studentId, faculty) {
+            const index = flaggedStudents.findIndex(s => s.student_id === studentId && s.faculty === faculty);
+            if (index !== -1) {
+                flaggedStudents.splice(index, 1);
+                localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                updateFlaggedStudentsTable();
+                Swal.fire('Success', 'Student has been unflagged', 'success');
+                $('#studentDetailsModal').modal('hide');
+            } else {
+                Swal.fire('Error', 'Failed to unflag student', 'error');
+            }
+        }
+        
+        // Initialize event listeners
+        function initializeDashboard() {
+            console.log('[INIT] Starting dashboard initialization...');
+            
+            // CRITICAL: Verify DOM is ready
+            if (!document.getElementById('flaggedStudentsTableBody')) {
+                console.error('[INIT] FATAL: DOM NOT READY! Table body element not found. Scheduling retry...');
+                setTimeout(initializeDashboard, 500);
+                return;
+            }
+            console.log('[INIT] ✓ DOM is ready, table tbody found');
+            
+            console.log('[INIT] Flagged students in memory:', flaggedStudents.length);
+            
+            // Ensure we have at least the sample data
+            if (flaggedStudents.length === 0) {
+                console.warn('[INIT] No flagged students found! Adding sample student for testing...');
+                flaggedStudents.push({
+                    student_id: "30499664",
+                    faculty: "engineering",
+                    prediction: "Failing",
+                    pass_probability: 0.016055207546831873,
+                    reason: "At risk of failing",
+                    date: "2025-06-14T18:26:15",
+                    student_data: {
+                        Gender: "M",
+                        LecturerTitle: "PROF",
+                        Language: "ZULU",
+                        Race: "AFRICAN",
+                        GapYears: 7,
+                        Department: "ELECTRICAL POWER ENGINEERING",
+                        OfferingType: "OTHER",
+                        FullPartTime: "F",
+                        Quintile: 1,
+                        PreviousActivity: "UNIVERSITY STUDENT",
+                        Religion: "CHRISTIAN",
+                        ExaminingAuthority: "KZ",
+                        StudentType: "F",
+                        ResidenceIndicator: "No",
+                        MaritalStatus: "M",
+                        MatricDescrip: "NSC DIP",
+                        StudentTypeDescription: "INTERNATIONAL STUDENT",
+                        FinalYearSymbol: 4,
+                        AgeGroup: "Teenager"
+                    },
+                    shap_values: {
+                        FullPartTime: -0.1491,
+                        MaritalStatus: -0.1143,
+                        StudentTypeDescription: -0.1805,
+                        PreviousActivity: 0.3200,
+                        Language: 0.2713,
+                        ResidenceIndicator: 0.0558,
+                        FinalYearSymbol: -0.4502
+                    }
+                });
+                localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                console.log('[INIT] ✓ Sample student added to array');
+            }
+            
+            // ALWAYS show the table first, regardless of recommendations
+            console.log('[INIT] Calling updateFlaggedStudentsTable()...');
+            updateFlaggedStudentsTable();
+            console.log('[INIT] ✓ Table updated successfully');
+            
+            // Then attempt to fetch recommendations (don't block if it fails)
+            try {
+                console.log('[INIT] Calling fetchAllRecommendations()...');
+                fetchAllRecommendations().catch(err => {
+                    console.error('[INIT] Recommendations fetch failed:', err);
+                    // Still show the table even if recommendations fail
+                });
+            } catch (err) {
+                console.error('[INIT] Error calling fetchAllRecommendations:', err);
+                // Continue anyway - table should already be visible
+            }
+            
+            const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+            if (viewHistoryBtn) {
+                viewHistoryBtn.addEventListener('click', function() {
+                    window.location.href = '/'; // Redirect to main dashboard for history
+                });
+            } else {
+                console.error("Element with ID 'viewHistoryBtn' not found.");
+            }
+            
+            const manageInterventionsBtn = document.getElementById('manageInterventionsBtn');
+            if (manageInterventionsBtn) {
+                manageInterventionsBtn.addEventListener('click', function() {
+                    Swal.fire('Interventions', 'This would open the interventions management interface in a real application.', 'info');
+                });
+            } else {
+                console.error("Element with ID 'manageInterventionsBtn' not found.");
+            }
+            
+            const clearAllFlagsBtn = document.getElementById('clearAllFlagsBtn');
+            if (clearAllFlagsBtn) {
+                clearAllFlagsBtn.addEventListener('click', clearAllFlags);
+            } else {
+                console.error("Element with ID 'clearAllFlagsBtn' not found.");
+            }
+            
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', exportToExcel);
+            } else {
+                console.error("Element with ID 'exportExcelBtn' not found.");
+            }
+            
+            const downloadPDFBtn = document.getElementById('downloadPDFBtn');
+            if (downloadPDFBtn) {
+                downloadPDFBtn.addEventListener('click', downloadPDF);
+            } else {
+                console.error("Element with ID 'downloadPDFBtn' not found.");
+            }
+            
+            // Email modal event listeners
+            const sendEmailBtn = document.getElementById('sendEmailBtn');
+            if (sendEmailBtn) {
+                sendEmailBtn.addEventListener('click', function() {
+                    const student = $('#emailModal').data('student');
+                    const subject = document.getElementById('emailSubject').value;
+                    const body = document.getElementById('emailBody').value;
+                    
+                    if (!student) {
+                        Swal.fire('Error', 'No student selected for email', 'error');
+                        return;
+                    }
+                    
+                    sendEmailToStudent(student, subject, body);
+                });
+            } else {
+                console.error("Element with ID 'sendEmailBtn' not found.");
+            }
+            
+            const previewAttachmentBtn = document.getElementById('previewAttachmentBtn');
+            if (previewAttachmentBtn) {
+                previewAttachmentBtn.addEventListener('click', function() {
+                    const student = $('#emailModal').data('student');
+                    if (student) {
+                        previewStudentReport(student);
+                    } else {
+                        Swal.fire('Error', 'No student selected for preview', 'error');
+                    }
+                });
+            } else {
+                console.error("Element with ID 'previewAttachmentBtn' not found.");
+            }
+            
+            // AI report modal event listener
+            const downloadAIReportBtn = document.getElementById('downloadAIReportBtn');
+            if (downloadAIReportBtn) {
+                downloadAIReportBtn.addEventListener('click', function() {
+                    const student = $('#aiReportModal').data('student');
+                    if (student) {
+                        downloadAIReport(student);
+                    } else {
+                        Swal.fire('Error', 'No student selected for report download', 'error');
+                    }
+                });
+            } else {
+                console.error("Element with ID 'downloadAIReportBtn' not found.");
+            }
+        }
+        
+        // ─── AUTO-RECOMMENDATION ENGINE ────────────────────────────────────────
+
+        /**
+         * Fetch recommendations from the backend for flagged students.
+         * Only processes students without recommendations, in batches of 10.
+         */
+        async function fetchAllRecommendations() {
+            const pending = flaggedStudents.filter(s => {
+                if (!s.recommendations) return true;
+                if (s.recommendations.recommendation_version !== RECOMMENDATION_VERSION) return true;
+                if (!Array.isArray(s.recommendations.course_recommendations) || s.recommendations.course_recommendations.length === 0) return true;
+                return false;
+            });
+            const BATCH_SIZE = 10; // Only fetch 10 at a time to avoid hammering the server
+            const batch = pending.slice(0, BATCH_SIZE);
+
+            if (batch.length === 0) {
+                console.log('[RECOMMENDER] All students already have recommendations');
+                return;
+            }
+
+            console.log(`[RECOMMENDER] Fetching recommendations for ${batch.length} students (${pending.length} total pending)...`);
+            let updated = false;
+
+            for (const student of batch) {
+                try {
+                    console.log(`[RECOMMENDER] Fetching for student ${student.student_id}...`);
+                    const response = await axios.post('/api/recommend-flagged', {
+                        student_data: student.student_data,
+                        faculty: student.faculty
+                    }, { timeout: 60000 });
+                    console.log(`[RECOMMENDER] ✓ Got recommendations for ${student.student_id}`);
+                    student.recommendations = response.data;
+                    updated = true;
+                } catch (err) {
+                    const errMsg = err.response?.data?.error || err.message || 'Unknown error';
+                    const status = err.response?.status || 'N/A';
+                    console.error(`[RECOMMENDER] ✗ Failed for ${student.student_id} (${status}):`, errMsg);
+                    student.recommendations = { 
+                        error: errMsg,
+                        statusCode: status,
+                        studentId: student.student_id
+                    };
+                    updated = true;
+                }
+            }
+
+            if (updated) {
+                localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                updateFlaggedStudentsTable();
+                console.log('[RECOMMENDER] Batch complete');
+            }
+        }
+
+        /**
+         * Display recommendations for a single student in a modal.
+         */
+        async function showRecommendations(studentId, faculty) {
+            const student = flaggedStudents.find(s => s.student_id === studentId && s.faculty === faculty);
+            if (!student) { Swal.fire('Error', 'Student not found', 'error'); return; }
+
+            const staleOrMissing = !student.recommendations ||
+                student.recommendations.recommendation_version !== RECOMMENDATION_VERSION ||
+                !Array.isArray(student.recommendations.course_recommendations) ||
+                student.recommendations.course_recommendations.length === 0;
+
+            // Fetch on-demand if not yet available or stale
+            if (staleOrMissing) {
+                Swal.fire({ title: 'Fetching...', text: 'Generating recommendations for this student...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                try {
+                    const response = await axios.post('/api/recommend-flagged', {
+                        student_data: student.student_data,
+                        faculty: student.faculty
+                    }, { timeout: 60000 });
+                    student.recommendations = response.data;
+                    localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                    Swal.close();
+                } catch (err) {
+                    const errMsg = err.response?.data?.error || err.message || 'Unknown error';
+                    student.recommendations = { error: errMsg, statusCode: err.response?.status };
+                    localStorage.setItem('flaggedStudents', JSON.stringify(flaggedStudents));
+                    Swal.fire('Error', 'Failed to fetch recommendations: ' + errMsg, 'error');
+                    return;
+                }
+            }
+            if (student.recommendations.error) {
+                let errDetail = student.recommendations.error;
+                if (student.recommendations.statusCode) {
+                    errDetail += ` (HTTP ${student.recommendations.statusCode})`;
+                }
+                errDetail += '<br><br><small>Check browser console (F12) for more details.</small>';
+                Swal.fire('Error Loading Recommendations', errDetail, 'error');
+                return;
+            }
+
+            const recs = student.recommendations;
+            let html = `<p class="text-muted mb-3">Based on similar student profiles in the dataset.</p>`;
+
+            if (recs.faculty_recommendations && recs.faculty_recommendations.length) {
+                html += `<h6 class="text-primary"><i class="fas fa-university"></i> Recommended Faculties</h6>
+                    <table class="ai-report-table">
+                    <tr><th>Faculty</th><th>Avg Mark</th><th>Students</th><th>Pass Rate</th></tr>`;
+                recs.faculty_recommendations.slice(0, 5).forEach(r => {
+                    html += `<tr>
+                        <td>${r.faculty || '-'}</td>
+                        <td>${r.avg_mark != null ? r.avg_mark.toFixed(2) : '-'}</td>
+                        <td>${r.student_count || '-'}</td>
+                        <td>${r.pass_rate != null ? (r.pass_rate * 100).toFixed(1) + '%' : '-'}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+            }
+
+            if (recs.department_recommendations && recs.department_recommendations.length) {
+                html += `<h6 class="text-primary mt-3"><i class="fas fa-building"></i> Recommended Departments</h6>
+                    <table class="ai-report-table">
+                    <tr><th>Department</th><th>Avg Mark</th><th>Students</th><th>Pass Rate</th></tr>`;
+                recs.department_recommendations.slice(0, 5).forEach(r => {
+                    html += `<tr>
+                        <td>${r.department || '-'}</td>
+                        <td>${r.avg_mark != null ? r.avg_mark.toFixed(2) : '-'}</td>
+                        <td>${r.student_count || '-'}</td>
+                        <td>${r.pass_rate != null ? (r.pass_rate * 100).toFixed(1) + '%' : '-'}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+            }
+
+            if (recs.course_recommendations && recs.course_recommendations.length) {
+                html += `<h6 class="text-primary mt-3"><i class="fas fa-book"></i> Recommended Courses</h6>
+                    <table class="ai-report-table">
+                    <tr><th>Course</th><th>Pass Rate</th><th>Avg Mark</th><th>Student Count</th></tr>`;
+                recs.course_recommendations.slice(0, 10).forEach(r => {
+                    html += `<tr>
+                        <td>${r.course || '-'}</td>
+                        <td>${(r.pass_rate * 100).toFixed(1)}%</td>
+                        <td>${r.avg_mark.toFixed(2)}</td>
+                        <td>${r.student_count}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+            }
+
+            if (!recs.faculty_recommendations?.length && !recs.course_recommendations?.length) {
+                html = `<p class="text-muted">No recommendations could be generated for this student profile.</p>`;
+            }
+
+            document.getElementById('recommendationsContent').innerHTML = html;
+            document.getElementById('recommendationsModalLabel').textContent =
+                `Recommendations — Student ${studentId} (${faculty === 'engineering' ? 'Engineering' : 'Applied Sciences'})`;
+            $('#recommendationsModal').modal('show');
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            updateFlaggedStudentsTable();
+            document.getElementById('flagged-students-table').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // Start the dashboard when the page loads
+        if (document.readyState === 'loading') {
+            // Still loading, wait for DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('[LOADER] DOMContentLoaded fired, scheduling init in 100ms...');
+                setTimeout(initializeDashboard, 100);
+            });
+        } else {
+            // Already loaded (if page was cached or script loaded late)
+            console.log('[LOADER] Document already loaded, running init immediately...');
+            setTimeout(initializeDashboard, 100);
+        }
+    </script>
+</body>
+</html>

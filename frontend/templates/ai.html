@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUTAi - AI Assistant</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Styling for the AI Chat Interface */
+        .mynav {
+            border-radius: 6px;
+            box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid white;
+            color: rgb(227, 227, 238);
+            text-shadow: 1px 1px 2px rgba(17, 17, 21, 0.8);
+            border-color: #e7ece9;
+            padding: 10px;
+            width: 100%;
+        }
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            transition: background-image 2s ease-in-out;
+        }
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #0d6efd;
+            color: white;
+            align-self: flex-end;
+        }
+        .ai-message {
+            background-color: #f8f9fa;
+            color: #333333;
+            align-self: flex-start;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0d6efd;
+            border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .form-control {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .btn-ai {
+            background-color: #18933f;
+            border-color: #18933f;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-ai:hover {
+            background-color: #137d35;
+            border-color: #137d35;
+        }
+        /* Improved header visibility */
+        .ai-header h3 {
+            color: #e9f0f3e4;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .ai-header p {
+            color: #f4f7f1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        .btn-back {
+            border:1px solid rgb(230, 220, 220);
+            color: rgb(104, 104, 108);
+            border-color: #0f6431;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            align-self: left;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage">
+        <!-- Back Button -->
+        <div class="back-button" style="padding: 10px;">
+            <a href="/" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+
+        <div class="mynav">
+            <h2 class="text-center"></i> DUTAi - STUDENT ASSISTANT</h2>
+        </div>
+
+        <div class="container mt-5">
+            <div class="ai-header">
+                <h3 class="text-center"><i class="fas fa-comments"></i>DUTAi</h3>
+                <div class="ai-header"></div>
+                <p class="text-center" >Ask me anything about courses, recommendations, or university life.</p>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai-message">
+                    <strong>DUTAi:</strong> Hello! I'm your DUT student assistant. How can I help you today?
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-group">
+                <input type="text" class="form-control" id="userInput" placeholder="Ask me anything...">
+                <button class="btn btn-ai" id="sendButton">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Background Image Rotation
+        const images = ["/static/img_3.png"];
+        let currentIndex = 0;
+
+        function changeBackground() {
+            document.getElementById('bgImage').style.backgroundImage = `url('${images[currentIndex]}')`;
+            currentIndex = (currentIndex + 1) % images.length;
+            setTimeout(changeBackground, 4000);
+        }
+
+        changeBackground();
+
+        // AI Chat Functionality
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            // Show typing indicator
+            const typingId = showTypingIndicator();
+
+            try {
+                // Call Flask backend API for AI response
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                // Add AI response to chat
+                addMessage(data.response, 'ai');
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator(typingId);
+                addMessage("Sorry, I'm having trouble connecting. Please try again later.", 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+
+            const senderName = sender === 'user' ? 'You' : 'DUTAi';
+            messageDiv.innerHTML = `<strong>${senderName}:</strong> ${text}`;
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            const id = `typingIndicator-${Date.now()}`;
+            typingDiv.className = 'message ai-message typing-indicator';
+            typingDiv.id = id;
+
+            typingDiv.innerHTML = `
+                <strong>DUTAi:</strong> 
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            `;
+
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const typingElement = document.getElementById(id);
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+    </script>
+</body>
+</html>

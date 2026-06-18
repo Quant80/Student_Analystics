@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            transition: background-image 2s ease-in-out;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(3px);
+        }
+        
+        .button-column {
+            width: 200px;
+            padding: 20px;
+            background-color: rgba(248, 249, 250, 0.3);
+            border-right: 1px solid rgba(222, 226, 230, 0.5);
+        }
+        
+        .btn-vertical {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: left;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background-color: rgba(233, 236, 239, 0.8);
+            color: #495057;
+            border: 1px solid rgba(206, 212, 218, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .btn-vertical:hover {
+            background-color: rgba(209, 215, 220, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(243, 236, 236, 0.2);
+        }
+        
+        .header-box {
+            background: rgba(248, 249, 250, 0.442);
+            border-radius: 6px;
+            color: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid rgba(108, 117, 125, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 1px solid rgba(233, 237, 240, 0.5);
+        }
+        
+        .header-box h1 {
+            font-size: 2.2rem;
+            color: #343a40;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .header-box p {
+            color: #25282b;
+            font-size: 1rem;
+            margin-bottom: 0;
+            text-align: center;
+        }
+        
+        .section-title {
+            background-color: rgba(108, 117, 125, 0.7);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 25px 0 15px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .form-container, .result-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .prediction-heading {
+            background-color: #6c757d;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .result-table {
+            width: 100%;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-table th, .result-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-table th {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .result-table td.prediction {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .result-table td.intervention {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .shap-legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .shap-legend div {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 3px;
+            border: 1px solid;
+        }
+        
+        .shap-legend .positive {
+            background-color: rgba(13, 22, 200, 0.1);
+            border-color: rgba(13, 22, 200, 0.5);
+        }
+        
+        .shap-legend .negative {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-color: rgba(255, 0, 0, 0.5);
+        }
+        
+        .shap-legend .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        
+        .shap-canvas-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #6c757d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-size: 0.8rem;
+            background-color: rgba(248, 249, 250, 0.7);
+            border-top: 1px solid rgba(222, 226, 230, 0.5);
+            margin-top: auto;
+        }
+        
+        .tab-content {
+            margin-top: 20px;
+        }
+        
+        #engineering-shap-chart, #applied-sciences-shap-chart {
+            height: 600px;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .button-column {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+                padding: 10px;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            
+            .btn-vertical {
+                display: inline-block;
+                width: auto;
+                margin-right: 10px;
+            }
+            
+            .header-box h1 {
+                font-size: 1.8rem;
+            }
+            
+            #engineering-shap-chart, #applied-sciences-shap-chart {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage"></div>
+    
+    <div class="content-wrapper">
+        <div class="main-container">
+            <div class="button-column">
+                <a href="/" class="btn-vertical">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/recommend" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Recommend
+                    </a>
+                <a href="/dashsite" class="btn-vertical">
+                    <i class="fas fa-edit"></i> Dashboard
+                </a>
+            </div>
+            
+            <div class="content-area">
+                <div class="header-box">
+                    <h1><i class="fas fa-tachometer-alt"></i> PREDICTION DASHBOARD</h1>
+                    <p>Real-time student success predictions</p>
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-chart-line"></i> Dashboard Overview
+                </div>
+                
+                <div class="tab-content">
+                    <!-- Engineering Faculty Section -->
+                    <div id="engineering-section">
+                        <div class="prediction-heading">Engineering Faculty Predictions</div>
+                        <div id="engineering-result-table" class="result-card"></div>
+                        <h5>Feature Contributions (SHAP Values)</h5>
+                        <div class="shap-legend">
+                            <div class="positive">
+                                <div class="color-box" style="background-color: rgba(13, 22, 200, 0.9);"></div>
+                                <span>Positive SHAP Values</span>
+                            </div>
+                            <div class="negative">
+                                <div class="color-box" style="background-color: rgba(255, 0, 0, 0.8);"></div>
+                                <span>Negative SHAP Values</span>
+                            </div>
+                        </div>
+                        <div class="shap-canvas-container">
+                            <div id="engineering-shap-chart">
+                                <canvas id="engineeringShapChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Applied Sciences Faculty Section -->
+                    <div id="applied-sciences-section" style="margin-top: 40px;">
+                        <div class="prediction-heading">Applied Sciences Faculty Predictions</div>
+                        <div id="applied-sciences-result-table" class="result-card"></div>
+                        <h5>Feature Contributions (SHAP Values)</h5>
+                        <div class="shap-legend">
+                            <div class="positive">
+                                <div class="color-box" style="background-color: rgba(13, 22, 200, 0.9);"></div>
+                                <span>Positive SHAP Values</span>
+                            </div>
+                            <div class="negative">
+                                <div class="color-box" style="background-color: rgba(255, 0, 0, 0.8);"></div>
+                                <span>Negative SHAP Values</span>
+                            </div>
+                        </div>
+                        <div class="shap-canvas-container">
+                            <div id="applied-sciences-shap-chart">
+                                <canvas id="appliedSciencesShapChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            © 2025 Prediction Dashboard | Data Analytics Department
+        </footer>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const images = [
+            "{{ url_for('static', filename='img_3.png') }}",
+            "{{ url_for('static', filename='img_4.jpeg') }}"
+        ];
+        let currentIndex = 0;
+
+        function changeBackground() {
+            document.getElementById('bgImage').style.backgroundImage = `url('${images[currentIndex]}')`;
+            currentIndex = (currentIndex + 1) % images.length;
+            setTimeout(changeBackground, 4000);
+        }
+
+        changeBackground();
+
+        // Function to generate random SHAP values
+        function generateShapValues(features) {
+            const shapValues = {};
+            features.forEach(feature => {
+                shapValues[feature] = (Math.random() * 4 - 2).toFixed(2); // Random value between -2 and 2
+            });
+            return shapValues;
+        }
+
+        // Function to generate random eight-digit student ID
+        function generateStudentId() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString(); // 10000000 to 99999999
+        }
+
+        // Function to generate dummy data for a student
+        function generateStudentData(faculty) {
+            const passProbability = Math.random();
+            const failProbability = 1 - passProbability;
+            const result = passProbability > 0.5 ? 'Student Passed' : 'Student Failed';
+
+            const engineeringFeatures = [
+                'Residence', 'FTEN Status', 'Bursary', 'Offering Type', 'Disability',
+                'Age Group', 'Exam Type', 'Exam Month', 'Race', 'Gender',
+                'Stud_Type', 'Marital Status'
+            ];
+
+            const appliedSciencesFeatures = [
+                'Department', 'Marital Status', 'Gender', 'Race', 'Disability',
+                'Stud Type', 'Exam Month', 'Exam Type', 'Offer Type', 'FTEN Status',
+                'Final Year', 'Residence', 'Bursary', 'Age Group'
+            ];
+
+            const features = faculty === 'engineering' ? engineeringFeatures : appliedSciencesFeatures;
+            const shapValues = generateShapValues(features);
+
+            return {
+                student_id: generateStudentId(),
+                result: result,
+                pass_probability: passProbability,
+                fail_probability: failProbability,
+                shap_values: shapValues
+            };
+        }
+
+        // Function to generate dummy data for both faculties
+        function generateDummyData() {
+            const engineeringData = [];
+            const appliedSciencesData = [];
+
+            // Generate data for 5 students in each faculty
+            for (let i = 1; i <= 5; i++) {
+                engineeringData.push(generateStudentData('engineering'));
+                appliedSciencesData.push(generateStudentData('applied_sciences'));
+            }
+
+            return {
+                engineering: engineeringData,
+                applied_sciences: appliedSciencesData
+            };
+        }
+
+        // Function to determine if intervention is needed
+        function needsIntervention(result) {
+            return result === 'Student Failed' ? 'Yes' : 'No';
+        }
+
+        // Function to render table and chart
+        function updateDashboard() {
+            const data = generateDummyData();
+
+            // Engineering Faculty
+            const engineeringData = data.engineering || [];
+            let engineeringTableHtml = `
+                <table class="result-table">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Prediction</th>
+                        <th>Pass Probability</th>
+                        <th>Fail Probability</th>
+                        <th>Intervention Needed</th>
+                    </tr>
+            `;
+            engineeringData.forEach(student => {
+                const interventionNeeded = needsIntervention(student.result);
+                engineeringTableHtml += `
+                    <tr>
+                        <td>${student.student_id}</td>
+                        <td class="prediction" style="background-color: ${student.result === 'Student Passed' ? '#28a745' : '#dc3545'};">${student.result}</td>
+                        <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                        <td>${(student.fail_probability * 100).toFixed(2)}%</td>
+                        <td class="${interventionNeeded === 'Yes' ? 'intervention' : ''}">${interventionNeeded}</td>
+                    </tr>
+                `;
+            });
+            engineeringTableHtml += '</table>';
+            document.getElementById('engineering-result-table').innerHTML = engineeringTableHtml;
+
+            const engineeringLabels = Object.keys(engineeringData[0]?.shap_values || {});
+            const engineeringValues = engineeringData.length > 0 ? Object.values(engineeringData[0].shap_values) : [];
+            const engineeringBackgroundColors = engineeringValues.map(val => parseFloat(val) >= 0 ? 'rgba(13, 22, 200, 0.9)' : 'rgba(255, 0, 0, 0.8)');
+            const engineeringChartCanvas = document.getElementById('engineeringShapChart');
+            if (engineeringChartCanvas.chart) {
+                engineeringChartCanvas.chart.destroy();
+            }
+            engineeringChartCanvas.chart = new Chart(engineeringChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: engineeringLabels,
+                    datasets: [{
+                        label: 'SHAP Values',
+                        data: engineeringValues,
+                        backgroundColor: engineeringBackgroundColors,
+                        borderColor: engineeringBackgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, title: { display: true, text: 'SHAP Value' } },
+                        y: { 
+                            title: { display: true, text: 'Feature' }, 
+                            ticks: { 
+                                font: { size: 10 },
+                                callback: function(value, index, values) {
+                                    const maxLength = 10;
+                                    const label = engineeringLabels[index];
+                                    if (label.length > maxLength) {
+                                        const words = label.split(' ');
+                                        let currentLine = '';
+                                        const lines = [];
+                                        words.forEach(word => {
+                                            if ((currentLine + word).length > maxLength) {
+                                                lines.push(currentLine.trim());
+                                                currentLine = word + ' ';
+                                            } else {
+                                                currentLine += word + ' ';
+                                            }
+                                        });
+                                        if (currentLine) lines.push(currentLine.trim());
+                                        return lines;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.x || 0;
+                                    return `${label}: ${value.toFixed(4)}`;
+                                }
+                            }
+                        }
+                    },
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Applied Sciences Faculty
+            const appliedSciencesData = data.applied_sciences || [];
+            let appliedSciencesTableHtml = `
+                <table class="result-table">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Prediction</th>
+                        <th>Pass Probability</th>
+                        <th>Fail Probability</th>
+                        <th>Intervention Needed</th>
+                    </tr>
+            `;
+            appliedSciencesData.forEach(student => {
+                const interventionNeeded = needsIntervention(student.result);
+                appliedSciencesTableHtml += `
+                    <tr>
+                        <td>${student.student_id}</td>
+                        <td class="prediction" style="background-color: ${student.result === 'Student Passed' ? '#28a745' : '#dc3545'};">${student.result}</td>
+                        <td>${(student.pass_probability * 100).toFixed(2)}%</td>
+                        <td>${(student.fail_probability * 100).toFixed(2)}%</td>
+                        <td class="${interventionNeeded === 'Yes' ? 'intervention' : ''}">${interventionNeeded}</td>
+                    </tr>
+                `;
+            });
+            appliedSciencesTableHtml += '</table>';
+            document.getElementById('applied-sciences-result-table').innerHTML = appliedSciencesTableHtml;
+
+            const appliedSciencesLabels = Object.keys(appliedSciencesData[0]?.shap_values || {});
+            const appliedSciencesValues = appliedSciencesData.length > 0 ? Object.values(appliedSciencesData[0].shap_values) : [];
+            const appliedSciencesBackgroundColors = appliedSciencesValues.map(val => parseFloat(val) >= 0 ? 'rgba(13, 22, 200, 0.9)' : 'rgba(255, 0, 0, 0.8)');
+            const appliedSciencesChartCanvas = document.getElementById('appliedSciencesShapChart');
+            if (appliedSciencesChartCanvas.chart) {
+                appliedSciencesChartCanvas.chart.destroy();
+            }
+            appliedSciencesChartCanvas.chart = new Chart(appliedSciencesChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: appliedSciencesLabels,
+                    datasets: [{
+                        label: 'SHAP Values',
+                        data: appliedSciencesValues,
+                        backgroundColor: appliedSciencesBackgroundColors,
+                        borderColor: appliedSciencesBackgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, title: { display: true, text: 'SHAP Value' } },
+                        y: { 
+                            title: { display: true, text: 'Feature' }, 
+                            ticks: { 
+                                font: { size: 10 },
+                                callback: function(value, index, values) {
+                                    const maxLength = 10;
+                                    const label = appliedSciencesLabels[index];
+                                    if (label.length > maxLength) {
+                                        const words = label.split(' ');
+                                        let currentLine = '';
+                                        const lines = [];
+                                        words.forEach(word => {
+                                            if ((currentLine + word).length > maxLength) {
+                                                lines.push(currentLine.trim());
+                                                currentLine = word + ' ';
+                                            } else {
+                                                currentLine += word + ' ';
+                                            }
+                                        });
+                                        if (currentLine) lines.push(currentLine.trim());
+                                        return lines;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.x || 0;
+                                    return `${label}: ${value.toFixed(4)}`;
+                                }
+                            }
+                        }
+                    },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Regenerate data every 2 minutes (120,000 milliseconds)
+        setInterval(updateDashboard, 1200);
+        updateDashboard(); // Initial load
+    </script>
+</body>
+</html>

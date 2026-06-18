@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Prediction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .mynav {
+            border-radius: 10px;
+            box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            width: 100%;
+        }
+        .container {
+            margin-top: 50px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            transition: background-image 2s ease-in-out;
+        }
+        .prediction-header {
+            background: linear-gradient(135deg, #880085, #008000);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result-display {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage">
+        <!-- Back Button -->
+        <div class="back-button">
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+        <div class="mynav shadow-sm">
+            <h1 class="text-center"><i class="fas fa-graduation-cap"></i> STUDENT PERFORMANCE PREDICTION</h1>
+        </div>
+        <div class="container mt-5">
+            <div class="prediction-header">
+                <h3><i class="fas fa-chart-line"></i> Student Performance Prediction</h3>
+                <p>Select a faculty to predict student performance</p>
+            </div>
+            <div class="form-group">
+                <label for="faculty-select"><strong>Select Faculty:</strong></label>
+                <select class="form-control" id="faculty-select">
+                    <option value="">-- Select Faculty --</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="applied-sciences">Applied Sciences</option>
+                </select>
+            </div>
+
+            <!-- Engineering Form -->
+            <div id="engineering-form" style="display: none;">
+                <h4 class="text-center text-success mb-4"><i class="fas fa-cogs"></i> Engineering Faculty</h4>
+                <form id="engineering-prediction-form">
+                    <!-- Add all fields for Engineering as per your original HTML -->
+                    <button type="submit" class="btn btn-primary">Predict</button>
+                </form>
+                <div id="engineering-result" class="result-display mt-4" style="display: none;"></div>
+                <canvas id="engineering-shap-chart" style="display: none;"></canvas>
+            </div>
+
+            <!-- Applied Sciences Form -->
+            <div id="applied-sciences-form" style="display: none;">
+                <h4 class="text-center text-purple mb-4"><i class="fas fa-flask"></i> Applied Sciences Faculty</h4>
+                <form id="applied-sciences-prediction-form">
+                    <!-- Add all fields for Applied Sciences as per your original HTML -->
+                    <button type="submit" class="btn btn-primary">Predict</button>
+                </form>
+                <div id="applied-sciences-result" class="result-display mt-4" style="display: none;"></div>
+                <canvas id="applied-sciences-shap-chart" style="display: none;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide forms based on faculty selection
+        document.getElementById('faculty-select').addEventListener('change', function () {
+            const selectedFaculty = this.value;
+            document.getElementById('engineering-form').style.display = 'none';
+            document.getElementById('applied-sciences-form').style.display = 'none';
+            if (selectedFaculty === 'engineering') {
+                document.getElementById('engineering-form').style.display = 'block';
+            } else if (selectedFaculty === 'applied-sciences') {
+                document.getElementById('applied-sciences-form').style.display = 'block';
+            }
+        });
+
+        // Handle Engineering form submission
+        document.getElementById('engineering-prediction-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            try {
+                const response = await fetch('/predictions/engineering', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                // Display prediction result
+                const resultDiv = document.getElementById('engineering-result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="alert ${result.prediction.result === 'Student Passed' ? 'alert-success' : 'alert-danger'}">
+                        <h5>${result.prediction.result}</h5>
+                        <p>Pass Probability: ${(result.prediction.pass_probability * 100).toFixed(2)}%</p>
+                        <p>Fail Probability: ${(result.prediction.fail_probability * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+
+                // Render SHAP chart
+                renderSHAPChart(result.shap_values, 'engineering-shap-chart');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while making the prediction.');
+            }
+        });
+
+        // Handle Applied Sciences form submission
+        document.getElementById('applied-sciences-prediction-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            try {
+                const response = await fetch('/predictions/applied-sciences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                // Display prediction result
+                const resultDiv = document.getElementById('applied-sciences-result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="alert ${result.prediction.result === 'Student Passed' ? 'alert-success' : 'alert-danger'}">
+                        <h5>${result.prediction.result}</h5>
+                        <p>Pass Probability: ${(result.prediction.pass_probability * 100).toFixed(2)}%</p>
+                        <p>Fail Probability: ${(result.prediction.fail_probability * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+
+                // Render SHAP chart
+                renderSHAPChart(result.shap_values, 'applied-sciences-shap-chart');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while making the prediction.');
+            }
+        });
+
+        // Function to render SHAP chart
+        function renderSHAPChart(shapValues, canvasId) {
+            const canvas = document.getElementById(canvasId);
+            canvas.style.display = 'block';
+
+            const labels = Object.keys(shapValues);
+            const values = Object.values(shapValues);
+            const backgroundColors = values.map(value => value >= 0 ? 'rgba(13, 22, 200, 0.9)' : 'rgba(255, 0, 0, 0.8)');
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SHAP Values',
+                        data: values,
+                        backgroundColor: backgroundColors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Features' } },
+                        y: { title: { display: true, text: 'SHAP Value' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

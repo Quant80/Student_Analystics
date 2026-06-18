@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Recommendation</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .mynav {
+            border-radius: 10px;
+            box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .container {
+            margin-top: 50px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.348);
+            text-align: center;
+        }
+
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            transition: background-image 2s ease-in-out;
+        }
+        
+        /* text formatting */
+        h1 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .mynav h1 {
+            color: white;
+            font-size: 2rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .container h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #f4f5f6;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background-color: #3467b2;
+            border-color: #0d6efd;
+            padding: 4px 10px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #6c2ed0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* New button style */
+        .btn-predict {
+            background-color: #880085;
+            border-color: #880085;
+            padding: 4px 10px;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-predict:hover {
+            background-color: #9b4ac3;
+            border-color: #cfc5ce;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-ai {
+            background-color: #18933f;
+            border-color: #d9dee2;
+            padding: 4px 10px;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ai:hover {
+            background-color: #8ac311;
+            border-color: #cfd7da;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<script>
+    function openBlazorApp() {
+        window.open('http://localhost:5183', 'BlazorAppWindow');
+    }
+</script>
+
+<body>
+    <div class="bg-image" id="bgImage">
+        <div class="mynav shadow-sm" style="background:transparent; color:rgb(255, 255, 255);text:bold; padding:10px;width:100%;">
+            <h1 class="text-center"><i class="fas fa-graduation-cap"></i> STUDENT Ai INTERGRATED SYSTEM</h1>
+        </div>
+
+        <div class="container mt-5">
+            <h5>WELCOME TO OUR STUDENT Ai INTERGRATED SYSTEM</h5>
+            This Ai system aims to Predict Student Success and  assist university students in selecting the most suitable Faculties and courses based on their academic performance and other perspectives.</p>
+            
+            <div class="button-group">
+                  <a href="/dashsite" class="btn btn-primary">Real-Time Predictions</a>
+                <a href="/recommend" class="btn btn-primary">Get Recommendations</a>
+               <!--<a href="/predict" class="btn btn-predict">Performance Predictions(Returning)</a>-->
+               <!-- <a href="/predict" class="btn btn-predict">Performance Predictions(First Time)</a>-->
+                <a href="/engineering" class="btn btn-predict">Engineering Predictions</a>
+                <a href="/applied-sciences" class="btn btn-predict">Applied Sciences Predictions</a>
+                <a href="/modelsai" class="btn btn-ai">ModelsAi</a>
+                <a href="/ai" class="btn btn-ai">DUTAi</a>
+                <!-- Space between sections -->
+               <div style="margin-bottom: 0.5rem;"></div>
+
+                <button class="" onclick="openBlazorApp()"><i class="fas fa-edit"></i> BlazorApp</button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const images = [
+            "{{ url_for('static', filename='img_3.png') }}",
+            "{{ url_for('static', filename='img_4.jpeg') }}"
+        ];
+        let currentIndex = 0;
+    
+        function changeBackground() {
+            document.getElementById('bgImage').style.backgroundImage = `url('${images[currentIndex]}')`;
+            currentIndex = (currentIndex + 1) % images.length;
+            // Change every 4 seconds
+            setTimeout(changeBackground, 4000);
+        }
+    
+        changeBackground();
+    </script>
+</body>
+</html>

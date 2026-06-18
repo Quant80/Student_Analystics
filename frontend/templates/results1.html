@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Recommendation System</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+        }
+        .btn-nav {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-nav:hover {
+            background-color: #d1d7dc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .content-frame {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        .header-box {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6c757d;
+        }
+        .header-box h1 {
+            font-size: 1.8rem;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .header-box p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        .section-title {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 25px 0 15px 0;
+            font-size: 1.1rem;
+        }
+        .table {
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .table thead th {
+            background-color: #495057;
+            color: white;
+            border: none;
+        }
+        .table tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+        .download-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .btn-download {
+            background-color: #28a745;
+            color: white;
+            font-weight: 500;
+            padding: 10px 25px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        .btn-download:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav-buttons">
+        <a href="/" class="btn btn-nav"><i class="fas fa-home"></i> Home</a>
+        <a href="/recommend" class="btn btn-nav"><i class="fas fa-edit"></i> Recommend</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-frame">
+        <div class="header-box">
+            <h1><i class="fas fa-graduation-cap"></i> STUDENT RECOMMENDATION SYSTEM</h1>
+            <p>Comprehensive student performance analysis and suggestions</p>
+        </div>
+
+        <!-- Sections with tables -->
+        {% set sections = {
+            'Similar Students': ('similar_students', ['Student ID', 'Similarity Score', 'Faculty', 'Department', 'Qualification', 'Performance', 'Pass Status']),
+            'Recommended Faculties': ('faculty_recommendations', ['Faculty', 'Average Mark', 'Student Count', 'Pass Rate (%)']),
+            'Recommended Departments': ('department_recommendations', ['Department', 'Average Mark', 'Student Count', 'Pass Rate (%)']),
+            'Recommended Qualifications': ('qualification_recommendations', ['Qualification', 'Average Mark', 'Student Count']),
+            'Recommended Courses': ('course_recommendations', ['Course', 'Pass Rate (%)', 'Average Mark', 'Student Count', 'Department', 'Faculty'])
+        } %}
+        {% for section_title, (key, headers) in sections.items() %}
+            <div class="section-title text-center">
+                <i class="fas fa-{{ 'users' if 'Similar' in section_title else 'university' if 'Faculty' in section_title else 'building' if 'Department' in section_title else 'certificate' if 'Qualification' in section_title else 'book' }}"></i>
+                {{ section_title }}
+            </div>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>{% for head in headers %}<th>{{ head }}</th>{% endfor %}</tr>
+                </thead>
+                <tbody>
+                    {% for row in recommendations[key] %}
+                        <tr>{% for val in row.values() %}<td>{{ val }}</td>{% endfor %}</tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
+
+    <!-- Download Button -->
+    <div class="download-container">
+        <button id="downloadBtn" class="btn btn-download">
+            <i class="fas fa-download"></i> Download
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2025 Student Recommendation System | Data Analytics Department
+    </footer>
+
+    <!-- CSV Export Script -->
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function () {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            const sections = {
+                'Similar Students': ['student_id','similarity_score','faculty','department','qualification','performance','pass_status'],
+                'Recommended Faculties': ['faculty','avg_mark','student_count','pass_rate'],
+                'Recommended Departments': ['department','avg_mark','student_count','pass_rate'],
+                'Recommended Qualifications': ['qualification','avg_mark','student_count'],
+                'Recommended Courses': ['course','pass_rate','avg_mark','student_count','department','faculty']
+            };
+
+            {% for section, fields in {
+                'Similar Students': 'similar_students',
+                'Recommended Faculties': 'faculty_recommendations',
+                'Recommended Departments': 'department_recommendations',
+                'Recommended Qualifications': 'qualification_recommendations',
+                'Recommended Courses': 'course_recommendations'
+            }.items() %}
+                csvContent += "\n{{ section }}\n";
+                {% set first = recommendations[fields][0] %}
+                csvContent += "{{ first.keys() | join(',') }}\n";
+                {% for row in recommendations[fields] %}
+                    csvContent += "{{ row.values() | join(',') }}\n";
+                {% endfor %}
+            {% endfor %}
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_recommendations.csv");
+            document.body.appendChild(link);
+            link.click();
+        });
+    </script>
+</body>
+</html>

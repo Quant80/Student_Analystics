@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModelsAI - AI Assistant</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.88);
+            --ink: #1f2937;
+            --brand: #6c757d;
+            --brand-2: #5a6268;
+            --muted: #64748b;
+            --border: #d9dee3;
+            --ai-strip: rgba(53, 113, 189, 0.22);
+            --ai-strip-border: rgba(42, 94, 168, 0.44);
+            --ai-btn-bg: rgba(246, 248, 251, 0.96);
+            --ai-btn-border: rgba(159, 171, 186, 0.8);
+            --ai-btn-text: #334155;
+            --ai-btn-active: #2f6eb8;
+            --pred-blue-start: #0f6ad3;
+            --pred-blue-end: #0a4ea8;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ink);
+        }
+
+        .bg-image {
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            transition: background-image 2s ease-in-out;
+            padding: 0;
+        }
+
+        .modelsai-shell {
+            width: 95vw;
+            min-height: calc(100vh - 24px);
+            margin: 12px auto;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.77), rgba(255, 255, 255, 0.87));
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 16px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .modelsai-header {
+            background: linear-gradient(135deg, var(--pred-blue-start), var(--pred-blue-end));
+            border-radius: 6px;
+            color: white;
+            padding: 20px;
+            margin: 10px 10px 0;
+            border-left: 5px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 10px 22px rgba(7, 49, 107, 0.35);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            position: relative;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+        }
+
+        .header-subtitle {
+            margin: 10px 0 0;
+            color: #e7f1ff;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .btn-back {
+            border: 1px solid rgba(108, 117, 125, 0.6);
+            color: #495057;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.8);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            position: absolute;
+            right: 14px;
+            top: 14px;
+        }
+
+        .btn-back:hover {
+            text-decoration: none;
+            color: #343a40;
+            background: rgba(233, 236, 239, 0.9);
+        }
+
+        .modelsai-main {
+            display: block;
+            min-height: 0;
+        }
+
+        .chat-pane {
+            padding: 14px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 0;
+            background: rgba(248, 249, 250, 0.45);
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            background: var(--ai-strip);
+            border: 1px solid var(--ai-strip-border);
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+        .prompt-chip, .tool-btn {
+            border: 1px solid var(--ai-btn-border);
+            background: var(--ai-btn-bg);
+            color: var(--ai-btn-text);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 0 0 auto;
+        }
+
+        .prompt-chip:hover, .tool-btn:hover {
+            background: #eef3f8;
+            transform: translateY(-1px);
+        }
+
+        .mode-switch {
+            display: inline-flex;
+            border: 1px solid var(--ai-btn-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: auto;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            flex: 0 0 auto;
+        }
+
+        .mode-btn {
+            border: none;
+            background: var(--ai-btn-bg);
+            color: var(--ai-btn-text);
+            padding: 4px 9px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .mode-btn + .mode-btn {
+            border-left: 1px solid #d4dade;
+        }
+
+        .mode-btn.active {
+            background: var(--ai-btn-active);
+            color: #ffffff;
+        }
+
+        .bg-switch-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 6px;
+            padding: 2px 4px;
+            border: 1px solid rgba(159, 171, 186, 0.8);
+            background: rgba(246, 248, 251, 0.92);
+            border-radius: 4px;
+            flex: 0 0 auto;
+        }
+
+        .bg-select {
+            border: 1px solid rgba(159, 171, 186, 0.8);
+            border-radius: 4px;
+            background: #ffffff;
+            color: #334155;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 6px;
+            max-width: 140px;
+        }
+
+        .bg-fav-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #334155;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .bg-fav-switch input {
+            margin: 0;
+        }
+
+        .chat-container {
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            background: #ffffff;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            max-width: 90%;
+        }
+
+        .user-message {
+            margin-left: auto;
+            background-color: #ff6f61;
+            color: white;
+        }
+
+        .ai-message {
+            background-color: #f8f9fa;
+            color: #1f2937;
+        }
+
+        .ai-meta {
+            margin-top: 8px;
+            font-size: 0.72rem;
+            color: #5b6570;
+            background: #eef2f6;
+            border: 1px solid #dde3ea;
+            border-radius: 999px;
+            display: inline-block;
+            padding: 2px 8px;
+        }
+
+        .ai-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ai-chart-card {
+            border: 1px solid #d9dee3;
+            border-radius: 8px;
+            padding: 8px;
+            background: #ffffff;
+            cursor: zoom-in;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .ai-chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .ai-chart-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+        .ai-chart-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .ai-message table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 0.88rem;
+        }
+        .ai-message th, .ai-message td {
+            border: 1px solid #d9dee3;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        .ai-message th {
+            background: #eef2f5;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #ff6f61;
+            border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .form-control {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .btn-ai {
+            background-color: var(--brand);
+            border-color: var(--brand);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-ai:hover {
+            background-color: var(--brand-2);
+            border-color: var(--brand-2);
+        }
+
+        .chart-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .chart-modal.open {
+            display: flex;
+        }
+
+        .chart-modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            width: min(95vw, 1100px);
+            max-height: 92vh;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        .chart-modal-content img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .chart-modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chart-close {
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 1.2rem;
+            }
+
+            .btn-back {
+                position: static;
+                margin-top: 10px;
+            }
+
+            .mode-switch {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image" id="bgImage">
+        <div class="modelsai-shell">
+            <div class="modelsai-header">
+                <h2 class="header-title"><i class="fas fa-brain"></i> MODELSAI - STUDENT ASSISTANT</h2>
+                <p class="header-subtitle">Real-time student success predictions and performance monitoring</p>
+                <a href="/dashsite" class="btn-back"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+
+            <div class="modelsai-main">
+                <section class="chat-pane">
+                    <div class="toolbar" id="quickPrompts"></div>
+
+                    <div class="chat-container" id="chatContainer">
+                        <div class="message ai-message">
+                            <strong>ModelsAI:</strong>
+                            <div style="margin-top:6px;">Hello! Ask for risk insights, SHAP drivers, intervention strategy, or faculty comparisons.</div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="userInput" placeholder="Ask for insights, charts, SHAP drivers, interventions...">
+                        <button class="btn btn-ai" id="sendButton">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="chart-modal" id="chartModal">
+            <div class="chart-modal-content">
+                <div class="chart-modal-head">
+                    <h5 id="chartModalTitle" style="margin:0;">Chart</h5>
+                    <button class="chart-close" id="closeChartModal"><i class="fas fa-times"></i> Close</button>
+                </div>
+                <img id="chartModalImage" src="" alt="Expanded chart">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const backgrounds = [
+            { id: 'campus-1', label: 'Campus A', url: '/static/img_1.png' },
+            { id: 'campus-2', label: 'Campus B', url: '/static/img_2.png' },
+            { id: 'campus-3', label: 'Campus C', url: '/static/img_3.png' },
+            { id: 'campus-4', label: 'Campus D', url: '/static/img_4.jpeg' }
+        ];
+        let currentIndex = 0;
+        let backgroundTimerId = null;
+        let currentSourceMode = 'both';
+        const quickPrompts = [
+            {
+                label: '3 key risk insights',
+                prompt: 'Give 3 executive insights from current risk data with clear priority ranking and action recommendations.'
+            },
+            {
+                label: 'Top SHAP drivers',
+                prompt: 'Show top SHAP features driving risk and explain what each means with practical intervention strategies.'
+            },
+            {
+                label: 'Eng vs Applied risk',
+                prompt: 'Compare engineering vs applied sciences risk profile, highlight the biggest gaps, and suggest focused interventions for each faculty.'
+            },
+            {
+                label: 'High-risk actions',
+                prompt: 'Summarize high-risk students and provide immediate, medium-term, and preventive intervention actions.'
+            }
+        ];
+
+        function getFavoriteBackgroundId() {
+            return localStorage.getItem('modelsai.favoriteBackgroundId') || '';
+        }
+
+        function setFavoriteBackgroundId(id) {
+            localStorage.setItem('modelsai.favoriteBackgroundId', id);
+        }
+
+        function isFavoriteModeEnabled() {
+            return localStorage.getItem('modelsai.useFavoriteBackground') === '1';
+        }
+
+        function setFavoriteModeEnabled(enabled) {
+            localStorage.setItem('modelsai.useFavoriteBackground', enabled ? '1' : '0');
+        }
+
+        function applyBackgroundByIndex(index) {
+            if (!backgrounds.length) return;
+            currentIndex = ((index % backgrounds.length) + backgrounds.length) % backgrounds.length;
+            const selected = backgrounds[currentIndex];
+            document.getElementById('bgImage').style.backgroundImage = `url('${selected.url}')`;
+            const bgSelect = document.getElementById('bgSelect');
+            if (bgSelect) bgSelect.value = selected.id;
+        }
+
+        function startBackgroundRotation() {
+            if (backgroundTimerId) {
+                clearInterval(backgroundTimerId);
+                backgroundTimerId = null;
+            }
+
+            if (isFavoriteModeEnabled()) return;
+
+            backgroundTimerId = setInterval(() => {
+                applyBackgroundByIndex(currentIndex + 1);
+            }, 7000);
+        }
+
+        function initializeBackgroundControls() {
+            const bgSelect = document.getElementById('bgSelect');
+            const favoriteSwitch = document.getElementById('bgFavoriteSwitch');
+            if (!bgSelect || !favoriteSwitch) return;
+
+            bgSelect.innerHTML = backgrounds.map(bg => `<option value="${bg.id}">${bg.label}</option>`).join('');
+
+            const favoriteId = getFavoriteBackgroundId();
+            const favoriteEnabled = isFavoriteModeEnabled();
+            favoriteSwitch.checked = favoriteEnabled;
+
+            if (favoriteEnabled && favoriteId) {
+                const idx = backgrounds.findIndex(bg => bg.id === favoriteId);
+                applyBackgroundByIndex(idx >= 0 ? idx : 0);
+            } else {
+                const idx = backgrounds.findIndex(bg => bg.id === 'campus-3');
+                applyBackgroundByIndex(idx >= 0 ? idx : 0);
+            }
+
+            bgSelect.addEventListener('change', function() {
+                const idx = backgrounds.findIndex(bg => bg.id === bgSelect.value);
+                applyBackgroundByIndex(idx >= 0 ? idx : 0);
+                if (favoriteSwitch.checked) {
+                    setFavoriteBackgroundId(bgSelect.value);
+                }
+            });
+
+            favoriteSwitch.addEventListener('change', function() {
+                setFavoriteModeEnabled(favoriteSwitch.checked);
+                if (favoriteSwitch.checked) {
+                    setFavoriteBackgroundId(bgSelect.value);
+                }
+                startBackgroundRotation();
+            });
+
+            startBackgroundRotation();
+        }
+
+        function renderPromptChips() {
+            const holder = document.getElementById('quickPrompts');
+            const buttons = quickPrompts.map(prompt =>
+                `<button class="prompt-chip" data-prompt="${prompt.prompt.replace(/"/g, '&quot;')}">${prompt.label}</button>`
+            ).join('');
+
+            holder.innerHTML = `${buttons}<button class="tool-btn" id="focusInputBtn"><i class="fas fa-keyboard"></i> Focus</button><div class="mode-switch" id="modeSwitch"><button class="mode-btn" data-mode="live">Live Insights</button><button class="mode-btn" data-mode="database">Database Insights</button><button class="mode-btn active" data-mode="both">Both</button></div><div class="bg-switch-group"><select id="bgSelect" class="bg-select"></select><label class="bg-fav-switch"><input type="checkbox" id="bgFavoriteSwitch">Favorite</label></div>`;
+            holder.querySelectorAll('.prompt-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('userInput').value = btn.getAttribute('data-prompt');
+                    document.getElementById('userInput').focus();
+                });
+            });
+
+            const focusBtn = document.getElementById('focusInputBtn');
+            if (focusBtn) {
+                focusBtn.addEventListener('click', () => document.getElementById('userInput').focus());
+            }
+
+            holder.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentSourceMode = btn.getAttribute('data-mode') || 'both';
+                    holder.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
+                    btn.classList.add('active');
+                    fetchContextSnapshot();
+                });
+            });
+
+            initializeBackgroundControls();
+        }
+
+        renderPromptChips();
+
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        const chartModal = document.getElementById('chartModal');
+        document.getElementById('closeChartModal').addEventListener('click', closeChartModal);
+        chartModal.addEventListener('click', function(evt) {
+            if (evt.target.id === 'chartModal') closeChartModal();
+        });
+
+        function openChartModal(title, image) {
+            document.getElementById('chartModalTitle').textContent = title || 'Chart';
+            document.getElementById('chartModalImage').src = `data:image/png;base64,${image}`;
+            chartModal.classList.add('open');
+        }
+
+        function closeChartModal() {
+            chartModal.classList.remove('open');
+            document.getElementById('chartModalImage').src = '';
+        }
+
+        function renderInlineChartGallery(charts) {
+            const list = Array.isArray(charts) ? charts : [];
+            if (!list.length) {
+                return '';
+            }
+
+            return `<div style="margin-top:10px;"><strong>Generated Charts</strong><div class="ai-chart-grid">${list.map((chart, idx) => `
+                <div class="ai-chart-card" data-inline-chart-index="${idx}">
+                    <div class="ai-chart-title">${chart.title || chart.type || 'Chart'}</div>
+                    <img src="data:image/png;base64,${chart.image}" alt="${chart.title || 'Chart'}" />
+                </div>
+            `).join('')}</div></div>`;
+        }
+
+        function pickRelevantVisualizationOptions(question, options) {
+            const list = Array.isArray(options) ? options : [];
+            if (!list.length) return [];
+
+            const q = (question || '').toLowerCase();
+            const scored = list.map(opt => {
+                const title = String(opt.title || opt.type || '').toLowerCase();
+                let score = 0;
+
+                if ((q.includes('faculty') || q.includes('engineering') || q.includes('applied')) && title.includes('faculty')) score += 4;
+                if ((q.includes('shap') || q.includes('feature') || q.includes('driver') || q.includes('explain')) && title.includes('shap')) score += 4;
+                if ((q.includes('risk') || q.includes('fail') || q.includes('intervention')) && (title.includes('fail') || title.includes('risk'))) score += 3;
+                if ((q.includes('distribution') || q.includes('overview') || q.includes('summary')) && (title.includes('distribution') || title.includes('share'))) score += 2;
+
+                return { opt, score };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            const picked = scored.filter(x => x.score > 0).slice(0, 3).map(x => x.opt);
+            if (picked.length) return picked;
+            return list.slice(0, 2);
+        }
+
+        function renderVisualizationFollowup(question, options) {
+            const picked = pickRelevantVisualizationOptions(question, options);
+            if (!picked.length) return '';
+            const items = picked.map(opt => `<li><strong>${opt.title || opt.type}</strong> (${opt.type})</li>`).join('');
+            return `<div style="margin-top:10px;"><em>If you want, I can generate one of these visuals for this question:</em><ul>${items}</ul></div>`;
+        }
+
+        function bindInlineChartClicks(charts) {
+            const list = Array.isArray(charts) ? charts : [];
+            document.querySelectorAll('[data-inline-chart-index]').forEach(card => {
+                card.addEventListener('click', function() {
+                    const chart = list[Number(card.getAttribute('data-inline-chart-index'))];
+                    if (chart) {
+                        openChartModal(chart.title || chart.type || 'Chart', chart.image);
+                    }
+                });
+            });
+        }
+
+        async function fetchContextSnapshot() {
+            try {
+                const response = await fetch(`/api/modelsai/context?source_mode=${encodeURIComponent(currentSourceMode)}`);
+                const data = await response.json();
+                if (!response.ok || data.error) {
+                    return;
+                }
+            } catch (err) {
+                console.error('Context fetch error:', err);
+            }
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            // Show typing indicator
+            const typingId = showTypingIndicator();
+
+            try {
+                // Call Flask backend API for AI response
+                const response = await fetch('/api/modelsai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message, source_mode: currentSourceMode })
+                });
+
+                const rawText = await response.text();
+                let data = null;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (_) {
+                    data = { error: 'Invalid server response format.' };
+                }
+
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                if (!response.ok || data.error) {
+                    const errorDetails = data && (data.details || data.error) ? ` (${data.details || data.error})` : '';
+                    addMessage(`I could not generate a response right now${errorDetails}. Please try again.`, 'ai');
+                    return;
+                }
+
+                let aiPayload = data.response || '<p>No response generated.</p>';
+
+                const topPreds = ((data.dashboard_data || {}).top_predictions || []).slice(0, 5);
+                if (topPreds.length > 0) {
+                    const headers = Object.keys(topPreds[0]);
+                    const headHtml = headers.map(h => `<th>${h}</th>`).join('');
+                    const bodyHtml = topPreds.map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`).join('');
+                    aiPayload += `<div style="margin-top:10px;"><strong>Top Risk Students Snapshot</strong><div style="overflow-x:auto;"><table style="width:100%; border-collapse: collapse; font-size:0.82rem;"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div></div>`;
+                }
+
+                aiPayload += renderInlineChartGallery(data.chart_images || []);
+
+                const providerLabel = (data.provider || 'openai').toUpperCase();
+                const sourceLabel = data.grounding_source || 'local-fallback';
+                const modeLabel = (data.source_mode || currentSourceMode || 'both').toUpperCase();
+                aiPayload += `<div class="ai-meta">Provider: ${providerLabel} | Source: ${sourceLabel} | Mode: ${modeLabel}</div>`;
+                aiPayload += renderVisualizationFollowup(message, data.visualization_options || []);
+                addMessage(aiPayload, 'ai');
+                bindInlineChartClicks(data.chart_images || []);
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator(typingId);
+                addMessage("Sorry, I'm having trouble connecting. Please try again later.", 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+
+            const senderName = sender === 'user' ? 'You' : 'ModelsAI';
+            if (sender === 'ai') {
+                messageDiv.innerHTML = `<strong>${senderName}:</strong><div style="margin-top:6px;">${text}</div>`;
+            } else {
+                messageDiv.innerHTML = `<strong>${senderName}:</strong> ${text}`;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            const id = `typingIndicator-${Date.now()}`;
+            typingDiv.className = 'message ai-message typing-indicator';
+            typingDiv.id = id;
+
+            typingDiv.innerHTML = `
+                <strong>ModelsAI:</strong> 
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            `;
+
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const typingElement = document.getElementById(id);
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+
+        fetchContextSnapshot();
+    </script>
+</body>
+</html>
